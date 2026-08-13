@@ -68,8 +68,7 @@ Click the **"Clear KB"** button in the knowledge base panel to delete all local 
 ├── main.py                 # (Optional) Standalone RAG pipeline script
 ├── requirements.txt        # Python dependencies (for backend mode)
 ├── .env.example            # Environment variable template
-└── docs/
-    └── README.md           # This file
+└── README.md               # This file
 ```
 
 ## Configuration / 配置
