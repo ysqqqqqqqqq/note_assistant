@@ -1,0 +1,248 @@
+{
+  "documents": {
+    "rag.md": "RAG 检索增强生成先从知识库检索证据，再交给语言模型生成带来源的答案。Retrieval augmented generation grounds answers in retrieved documents.",
+    "bm25.md": "BM25 基于词频、逆文档频率及文档长度进行关键词检索，不需要训练词向量。BM25 ranks documents by term frequency and inverse document frequency.",
+    "dense.md": "Dense retrieval encodes a query and documents into embedding vectors and compares their semantic similarity. 向量检索能够匹配语义相近但用词不同的文本。",
+    "rerank.md": "Cross encoder jointly reads a query and each candidate passage, then reranks candidates using relevance scores. BGE reranker 是交叉编码器重排模型。",
+    "chunk.md": "分块 chunking 应考虑段落、句子边界、最大长度和重叠窗口，保留文档来源及字符偏移，方便引用。",
+    "cache.md": "缓存 cache 减少重复查询耗时；文档替换或删除后应使检索缓存失效，避免旧答案。",
+    "metrics.md": "Recall@K 衡量相关文档召回比例，MRR 衡量首个相关结果排名，nDCG 考虑相关性等级和排序位置。",
+    "food.md": "红烧肉使用猪肉、酱油和糖慢炖。Braised pork is cooked with soy sauce and sugar.",
+    "physics.md": "Quantum mechanics studies atoms and subatomic particles. 量子力学研究原子与亚原子粒子。",
+    "filter.md": "Metadata filtering limits retrieval to matching file names, tags or courses before ranking. 元数据过滤在候选召回前限定搜索范围。"
+  },
+  "queries": [
+    {
+      "query": "BM25",
+      "relevance": {
+        "bm25.md": 1
+      },
+      "filters": null,
+      "split": "regression"
+    },
+    {
+      "query": "词频和逆文档频率",
+      "relevance": {
+        "bm25.md": 1
+      },
+      "filters": null,
+      "split": "regression"
+    },
+    {
+      "query": "semantic similarity vectors",
+      "relevance": {
+        "dense.md": 1
+      },
+      "filters": null,
+      "split": "regression"
+    },
+    {
+      "query": "不同用词但意思接近",
+      "relevance": {
+        "dense.md": 1
+      },
+      "filters": null,
+      "split": "regression"
+    },
+    {
+      "query": "jointly reads query and passage",
+      "relevance": {
+        "rerank.md": 1
+      },
+      "filters": null,
+      "split": "regression"
+    },
+    {
+      "query": "BGE reranker",
+      "relevance": {
+        "rerank.md": 1
+      },
+      "filters": null,
+      "split": "regression"
+    },
+    {
+      "query": "句子边界和重叠窗口",
+      "relevance": {
+        "chunk.md": 1
+      },
+      "filters": null,
+      "split": "regression"
+    },
+    {
+      "query": "删除文档后避免旧结果",
+      "relevance": {
+        "cache.md": 1
+      },
+      "filters": null,
+      "split": "regression"
+    },
+    {
+      "query": "first relevant result ranking MRR",
+      "relevance": {
+        "metrics.md": 1
+      },
+      "filters": null,
+      "split": "regression"
+    },
+    {
+      "query": "酱油猪肉",
+      "relevance": {
+        "food.md": 1
+      },
+      "filters": null,
+      "split": "regression"
+    },
+    {
+      "query": "atoms subatomic particles",
+      "relevance": {
+        "physics.md": 1
+      },
+      "filters": null,
+      "split": "regression"
+    },
+    {
+      "query": "限制文件名搜索范围",
+      "relevance": {
+        "filter.md": 1
+      },
+      "filters": null,
+      "split": "regression"
+    },
+    {
+      "query": "answers grounded in documents",
+      "relevance": {
+        "rag.md": 1
+      },
+      "filters": null,
+      "split": "regression"
+    },
+    {
+      "query": "BM25",
+      "relevance": {
+        "bm25.md": 1
+      },
+      "filters": {
+        "source": "bm25.md"
+      },
+      "split": "regression"
+    },
+    {
+      "query": "BM25",
+      "relevance": {},
+      "filters": {
+        "source": "food.md"
+      },
+      "split": "regression"
+    },
+    {
+      "query": "火星殖民地现任市长姓名",
+      "relevance": {},
+      "filters": null,
+      "split": "regression"
+    },
+    {
+      "query": "Search using word frequency and document length",
+      "relevance": {
+        "bm25.md": 1
+      },
+      "split": "new_queries"
+    },
+    {
+      "query": "Find passages whose meaning matches a question",
+      "relevance": {
+        "dense.md": 1
+      },
+      "split": "new_queries"
+    },
+    {
+      "query": "A model scores the question together with a passage",
+      "relevance": {
+        "rerank.md": 1
+      },
+      "split": "new_queries"
+    },
+    {
+      "query": "How can retrieved documents ground generated responses?",
+      "relevance": {
+        "rag.md": 1
+      },
+      "split": "new_queries"
+    },
+    {
+      "query": "How is the position of the first correct result measured?",
+      "relevance": {
+        "metrics.md": 1
+      },
+      "split": "new_queries"
+    },
+    {
+      "query": "Which dish uses sugar and soy sauce?",
+      "relevance": {
+        "food.md": 1
+      },
+      "split": "new_queries"
+    },
+    {
+      "query": "Science concerning atomic particles",
+      "relevance": {
+        "physics.md": 1
+      },
+      "split": "new_queries"
+    },
+    {
+      "query": "限制搜索范围到某个文件",
+      "relevance": {
+        "filter.md": 1
+      },
+      "split": "new_queries"
+    },
+    {
+      "query": "缓存失效如何避免旧答案",
+      "relevance": {
+        "cache.md": 1
+      },
+      "split": "new_queries"
+    },
+    {
+      "query": "怎样设置分块重叠并保留来源",
+      "relevance": {
+        "chunk.md": 1
+      },
+      "split": "new_queries"
+    },
+    {
+      "query": "意思相同但措辞不同的查询",
+      "relevance": {
+        "dense.md": 1
+      },
+      "split": "new_queries"
+    },
+    {
+      "query": "专业模型对问题和段落联合打分",
+      "relevance": {
+        "rerank.md": 1
+      },
+      "split": "new_queries"
+    },
+    {
+      "query": "Who won the 2038 football world cup?",
+      "relevance": {},
+      "split": "new_queries"
+    },
+    {
+      "query": "本周黄金价格是多少",
+      "relevance": {},
+      "split": "new_queries"
+    },
+    {
+      "query": "What is the password for my bank account?",
+      "relevance": {},
+      "split": "new_queries"
+    },
+    {
+      "query": "南极洲今天的天气预报",
+      "relevance": {},
+      "split": "new_queries"
+    }
+  ]
+}

@@ -1,0 +1,290 @@
+[
+  {
+    "source": "cache-v2.md",
+    "text": "# 缓存规范 v2\n\n查询缓存有效期为十二分钟。\n\n离线状态不允许写入共享缓存。\n\n此页只说明版本v2的约束，流程细节见配套流程文档。",
+    "metadata": {
+      "version": "v2",
+      "topic": "cache"
+    }
+  },
+  {
+    "source": "cache-流程.md",
+    "text": "# 缓存操作流程 v2\n\n删除文档后，必须先清除结果缓存，再通知索引进程。\n\n操作失败应保留诊断记录，本页未约定费用、负责人、性能统计或账户凭证。",
+    "metadata": {
+      "version": "v2",
+      "topic": "cache"
+    }
+  },
+  {
+    "source": "cache-v1.md",
+    "text": "# 缓存历史规范 v1（已归档）\n\n查询缓存有效期为三分钟。\n\n此版本已停止执行，当前规则以v2为准。",
+    "metadata": {
+      "version": "v1",
+      "topic": "cache"
+    }
+  },
+  {
+    "source": "upload-v2.md",
+    "text": "# 上传规范 v2\n\n单个文本文件最多四兆字节。\n\n扫描版PDF不自动执行文字识别。\n\n此页只说明版本v2的约束，流程细节见配套流程文档。",
+    "metadata": {
+      "version": "v2",
+      "topic": "upload"
+    }
+  },
+  {
+    "source": "upload-流程.md",
+    "text": "# 上传操作流程 v2\n\n重复上传同名文件时，保留旧文件直到新索引提交成功。\n\n操作失败应保留诊断记录，本页未约定费用、负责人、性能统计或账户凭证。",
+    "metadata": {
+      "version": "v2",
+      "topic": "upload"
+    }
+  },
+  {
+    "source": "upload-v1.md",
+    "text": "# 上传历史规范 v1（已归档）\n\n单个文本文件最多一兆字节。\n\n此版本已停止执行，当前规则以v2为准。",
+    "metadata": {
+      "version": "v1",
+      "topic": "upload"
+    }
+  },
+  {
+    "source": "auth-v2.md",
+    "text": "# 访问令牌规范 v2\n\n访问令牌有效期为四十五分钟。\n\n访客令牌不能删除知识库。\n\n此页只说明版本v2的约束，流程细节见配套流程文档。",
+    "metadata": {
+      "version": "v2",
+      "topic": "auth"
+    }
+  },
+  {
+    "source": "auth-流程.md",
+    "text": "# 访问令牌操作流程 v2\n\n令牌撤销后，网关清理会话并要求重新登录。\n\n操作失败应保留诊断记录，本页未约定费用、负责人、性能统计或账户凭证。",
+    "metadata": {
+      "version": "v2",
+      "topic": "auth"
+    }
+  },
+  {
+    "source": "auth-v1.md",
+    "text": "# 访问令牌历史规范 v1（已归档）\n\n访问令牌有效期为十五分钟。\n\n此版本已停止执行，当前规则以v2为准。",
+    "metadata": {
+      "version": "v1",
+      "topic": "auth"
+    }
+  },
+  {
+    "source": "job-v2.md",
+    "text": "# 批处理规范 v2\n\n单批任务最多包含十八个文档。\n\n暂停任务不会删除已完成的结果。\n\n此页只说明版本v2的约束，流程细节见配套流程文档。",
+    "metadata": {
+      "version": "v2",
+      "topic": "job"
+    }
+  },
+  {
+    "source": "job-流程.md",
+    "text": "# 批处理操作流程 v2\n\n恢复任务时，从最后一个成功检查点继续，失败文档单独排队。\n\n操作失败应保留诊断记录，本页未约定费用、负责人、性能统计或账户凭证。",
+    "metadata": {
+      "version": "v2",
+      "topic": "job"
+    }
+  },
+  {
+    "source": "job-v1.md",
+    "text": "# 批处理历史规范 v1（已归档）\n\n单批任务最多包含六个文档。\n\n此版本已停止执行，当前规则以v2为准。",
+    "metadata": {
+      "version": "v1",
+      "topic": "job"
+    }
+  },
+  {
+    "source": "embedding-v2.md",
+    "text": "# 向量编码规范 v2\n\n向量编码批大小固定为十六。\n\n向量模型缺失时不生成随机向量。\n\n此页只说明版本v2的约束，流程细节见配套流程文档。",
+    "metadata": {
+      "version": "v2",
+      "topic": "embedding"
+    }
+  },
+  {
+    "source": "embedding-流程.md",
+    "text": "# 向量编码操作流程 v2\n\n模型缺失时启用关键词检索，并在状态页标记降级。\n\n操作失败应保留诊断记录，本页未约定费用、负责人、性能统计或账户凭证。",
+    "metadata": {
+      "version": "v2",
+      "topic": "embedding"
+    }
+  },
+  {
+    "source": "embedding-v1.md",
+    "text": "# 向量编码历史规范 v1（已归档）\n\n向量编码批大小固定为八。\n\n此版本已停止执行，当前规则以v2为准。",
+    "metadata": {
+      "version": "v1",
+      "topic": "embedding"
+    }
+  },
+  {
+    "source": "backup-v2.md",
+    "text": "# 备份规范 v2\n\n备份保留期为二十一天。\n\n恢复备份不会覆盖尚未保存的编辑。\n\n此页只说明版本v2的约束，流程细节见配套流程文档。",
+    "metadata": {
+      "version": "v2",
+      "topic": "backup"
+    }
+  },
+  {
+    "source": "backup-流程.md",
+    "text": "# 备份操作流程 v2\n\n恢复前先导出当前快照，校验备份通过后再切换数据库。\n\n操作失败应保留诊断记录，本页未约定费用、负责人、性能统计或账户凭证。",
+    "metadata": {
+      "version": "v2",
+      "topic": "backup"
+    }
+  },
+  {
+    "source": "backup-v1.md",
+    "text": "# 备份历史规范 v1（已归档）\n\n备份保留期为七天。\n\n此版本已停止执行，当前规则以v2为准。",
+    "metadata": {
+      "version": "v1",
+      "topic": "backup"
+    }
+  },
+  {
+    "source": "index-v2.md",
+    "text": "# 索引规范 v2\n\n增量索引每九分钟触发一次。\n\n索引构建失败不切换正在服务的旧索引。\n\n此页只说明版本v2的约束，流程细节见配套流程文档。",
+    "metadata": {
+      "version": "v2",
+      "topic": "index"
+    }
+  },
+  {
+    "source": "index-流程.md",
+    "text": "# 索引操作流程 v2\n\n新索引通过完整性检查后，才原子切换并广播版本号。\n\n操作失败应保留诊断记录，本页未约定费用、负责人、性能统计或账户凭证。",
+    "metadata": {
+      "version": "v2",
+      "topic": "index"
+    }
+  },
+  {
+    "source": "index-v1.md",
+    "text": "# 索引历史规范 v1（已归档）\n\n增量索引每两分钟触发一次。\n\n此版本已停止执行，当前规则以v2为准。",
+    "metadata": {
+      "version": "v1",
+      "topic": "index"
+    }
+  },
+  {
+    "source": "citation-v2.md",
+    "text": "# 引用规范 v2\n\n每条答案最多展示五个来源。\n\n不存在的引用编号不能标为已验证。\n\n此页只说明版本v2的约束，流程细节见配套流程文档。",
+    "metadata": {
+      "version": "v2",
+      "topic": "citation"
+    }
+  },
+  {
+    "source": "citation-流程.md",
+    "text": "# 引用操作流程 v2\n\n引用检查失败时保留原回答，但显示未验证标记并列出问题编号。\n\n操作失败应保留诊断记录，本页未约定费用、负责人、性能统计或账户凭证。",
+    "metadata": {
+      "version": "v2",
+      "topic": "citation"
+    }
+  },
+  {
+    "source": "citation-v1.md",
+    "text": "# 引用历史规范 v1（已归档）\n\n每条答案最多展示两个来源。\n\n此版本已停止执行，当前规则以v2为准。",
+    "metadata": {
+      "version": "v1",
+      "topic": "citation"
+    }
+  },
+  {
+    "source": "filter-v2.md",
+    "text": "# 过滤规范 v2\n\n文件过滤最多同时选择七个文件名。\n\n过滤条件为空不代表跳过权限检查。\n\n此页只说明版本v2的约束，流程细节见配套流程文档。",
+    "metadata": {
+      "version": "v2",
+      "topic": "filter"
+    }
+  },
+  {
+    "source": "filter-流程.md",
+    "text": "# 过滤操作流程 v2\n\n权限过滤先于相似度排序执行，被拒绝的文档不进入候选集合。\n\n操作失败应保留诊断记录，本页未约定费用、负责人、性能统计或账户凭证。",
+    "metadata": {
+      "version": "v2",
+      "topic": "filter"
+    }
+  },
+  {
+    "source": "filter-v1.md",
+    "text": "# 过滤历史规范 v1（已归档）\n\n文件过滤最多同时选择三个文件名。\n\n此版本已停止执行，当前规则以v2为准。",
+    "metadata": {
+      "version": "v1",
+      "topic": "filter"
+    }
+  },
+  {
+    "source": "export-v2.md",
+    "text": "# 导出规范 v2\n\n单次导出最多包含三十张批注卡片。\n\n导出失败不会清空当前编辑内容。\n\n此页只说明版本v2的约束，流程细节见配套流程文档。",
+    "metadata": {
+      "version": "v2",
+      "topic": "export"
+    }
+  },
+  {
+    "source": "export-流程.md",
+    "text": "# 导出操作流程 v2\n\n导出先保存临时文件，校验成功后才替换目标文件。\n\n操作失败应保留诊断记录，本页未约定费用、负责人、性能统计或账户凭证。",
+    "metadata": {
+      "version": "v2",
+      "topic": "export"
+    }
+  },
+  {
+    "source": "export-v1.md",
+    "text": "# 导出历史规范 v1（已归档）\n\n单次导出最多包含十张批注卡片。\n\n此版本已停止执行，当前规则以v2为准。",
+    "metadata": {
+      "version": "v1",
+      "topic": "export"
+    }
+  },
+  {
+    "source": "rewrite-v2.md",
+    "text": "# 查询改写规范 v2\n\n每个问题最多生成两条改写。\n\n查询改写不得改变原问题中的否定条件。\n\n此页只说明版本v2的约束，流程细节见配套流程文档。",
+    "metadata": {
+      "version": "v2",
+      "topic": "rewrite"
+    }
+  },
+  {
+    "source": "rewrite-流程.md",
+    "text": "# 查询改写操作流程 v2\n\n改写服务超时后保留原问题直接检索，并标记改写失败。\n\n操作失败应保留诊断记录，本页未约定费用、负责人、性能统计或账户凭证。",
+    "metadata": {
+      "version": "v2",
+      "topic": "rewrite"
+    }
+  },
+  {
+    "source": "rewrite-v1.md",
+    "text": "# 查询改写历史规范 v1（已归档）\n\n每个问题最多生成一条改写。\n\n此版本已停止执行，当前规则以v2为准。",
+    "metadata": {
+      "version": "v1",
+      "topic": "rewrite"
+    }
+  },
+  {
+    "source": "rerank-v2.md",
+    "text": "# 候选重排规范 v2\n\n重排候选上限为二十四个片段。\n\n重排错误不会自动改用外部搜索引擎。\n\n此页只说明版本v2的约束，流程细节见配套流程文档。",
+    "metadata": {
+      "version": "v2",
+      "topic": "rerank"
+    }
+  },
+  {
+    "source": "rerank-流程.md",
+    "text": "# 候选重排操作流程 v2\n\n重排器异常时沿用融合排序，并在返回结果中注明异常。\n\n操作失败应保留诊断记录，本页未约定费用、负责人、性能统计或账户凭证。",
+    "metadata": {
+      "version": "v2",
+      "topic": "rerank"
+    }
+  },
+  {
+    "source": "rerank-v1.md",
+    "text": "# 候选重排历史规范 v1（已归档）\n\n重排候选上限为八个片段。\n\n此版本已停止执行，当前规则以v2为准。",
+    "metadata": {
+      "version": "v1",
+      "topic": "rerank"
+    }
+  }
+]

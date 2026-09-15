@@ -1,0 +1,530 @@
+[
+  {
+    "id": "cache-direct",
+    "family": "cache",
+    "split": "dev",
+    "kind": "direct",
+    "query": "缓存规范v2：查询缓存多久过期？",
+    "relevance": {
+      "cache-v2.md": 2
+    },
+    "reference_answer": "查询缓存有效期为十二分钟。",
+    "filters": {
+      "topic": "cache",
+      "version": "v2"
+    }
+  },
+  {
+    "id": "cache-paraphrase",
+    "family": "cache",
+    "split": "dev",
+    "kind": "paraphrase",
+    "query": "同一个问题的临时结果能保留多长时间？",
+    "relevance": {
+      "cache-v2.md": 2
+    },
+    "reference_answer": "查询缓存有效期为十二分钟。",
+    "filters": {
+      "topic": "cache",
+      "version": "v2"
+    }
+  },
+  {
+    "id": "cache-negation",
+    "family": "cache",
+    "split": "dev",
+    "kind": "negation",
+    "query": "断网时是否允许更新共享缓存？",
+    "relevance": {
+      "cache-v2.md": 2
+    },
+    "reference_answer": "离线状态不允许写入共享缓存。",
+    "filters": {
+      "topic": "cache",
+      "version": "v2"
+    }
+  },
+  {
+    "id": "cache-procedure",
+    "family": "cache",
+    "split": "dev",
+    "kind": "procedure",
+    "query": "删除文档时除了处理缓存还要通知谁？",
+    "relevance": {
+      "cache-流程.md": 2
+    },
+    "reference_answer": "删除文档后，必须先清除结果缓存，再通知索引进程。",
+    "filters": {
+      "topic": "cache",
+      "version": "v2"
+    }
+  },
+  {
+    "id": "cache-cross_version",
+    "family": "cache",
+    "split": "dev",
+    "kind": "cross_version",
+    "query": "缓存的v1和v2数量或时长规定分别是什么？",
+    "relevance": {
+      "cache-v2.md": 2,
+      "cache-v1.md": 2
+    },
+    "reference_answer": "查询缓存有效期为三分钟。 查询缓存有效期为十二分钟。",
+    "filters": {
+      "topic": "cache"
+    }
+  },
+  {
+    "id": "cache-unanswerable",
+    "family": "cache",
+    "split": "dev",
+    "kind": "unanswerable",
+    "query": "缓存命中率达到多少才触发扩容？",
+    "relevance": {},
+    "reference_answer": "材料没有提供该信息。",
+    "filters": {
+      "topic": "cache",
+      "version": "v2"
+    }
+  },
+  {
+    "id": "upload-direct",
+    "family": "upload",
+    "split": "dev",
+    "kind": "direct",
+    "query": "上传规范v2：文本文件的大小上限是多少？",
+    "relevance": {
+      "upload-v2.md": 2
+    },
+    "reference_answer": "单个文本文件最多四兆字节。",
+    "filters": {
+      "topic": "upload",
+      "version": "v2"
+    }
+  },
+  {
+    "id": "upload-paraphrase",
+    "family": "upload",
+    "split": "dev",
+    "kind": "paraphrase",
+    "query": "一份文字材料最多能占多少存储空间才允许导入？",
+    "relevance": {
+      "upload-v2.md": 2
+    },
+    "reference_answer": "单个文本文件最多四兆字节。",
+    "filters": {
+      "topic": "upload",
+      "version": "v2"
+    }
+  },
+  {
+    "id": "upload-negation",
+    "family": "upload",
+    "split": "dev",
+    "kind": "negation",
+    "query": "扫描件会自动识别文字吗？",
+    "relevance": {
+      "upload-v2.md": 2
+    },
+    "reference_answer": "扫描版PDF不自动执行文字识别。",
+    "filters": {
+      "topic": "upload",
+      "version": "v2"
+    }
+  },
+  {
+    "id": "upload-procedure",
+    "family": "upload",
+    "split": "dev",
+    "kind": "procedure",
+    "query": "同名文档重新导入时何时替换旧文件？",
+    "relevance": {
+      "upload-流程.md": 2
+    },
+    "reference_answer": "重复上传同名文件时，保留旧文件直到新索引提交成功。",
+    "filters": {
+      "topic": "upload",
+      "version": "v2"
+    }
+  },
+  {
+    "id": "upload-cross_version",
+    "family": "upload",
+    "split": "dev",
+    "kind": "cross_version",
+    "query": "上传的v1和v2数量或时长规定分别是什么？",
+    "relevance": {
+      "upload-v2.md": 2,
+      "upload-v1.md": 2
+    },
+    "reference_answer": "单个文本文件最多一兆字节。 单个文本文件最多四兆字节。",
+    "filters": {
+      "topic": "upload"
+    }
+  },
+  {
+    "id": "upload-unanswerable",
+    "family": "upload",
+    "split": "dev",
+    "kind": "unanswerable",
+    "query": "上传失败会发送几封通知邮件？",
+    "relevance": {},
+    "reference_answer": "材料没有提供该信息。",
+    "filters": {
+      "topic": "upload",
+      "version": "v2"
+    }
+  },
+  {
+    "id": "auth-direct",
+    "family": "auth",
+    "split": "dev",
+    "kind": "direct",
+    "query": "访问令牌规范v2：访问令牌多久失效？",
+    "relevance": {
+      "auth-v2.md": 2
+    },
+    "reference_answer": "访问令牌有效期为四十五分钟。",
+    "filters": {
+      "topic": "auth",
+      "version": "v2"
+    }
+  },
+  {
+    "id": "auth-paraphrase",
+    "family": "auth",
+    "split": "dev",
+    "kind": "paraphrase",
+    "query": "登录后用于访问接口的凭证可以使用多长时间？",
+    "relevance": {
+      "auth-v2.md": 2
+    },
+    "reference_answer": "访问令牌有效期为四十五分钟。",
+    "filters": {
+      "topic": "auth",
+      "version": "v2"
+    }
+  },
+  {
+    "id": "auth-negation",
+    "family": "auth",
+    "split": "dev",
+    "kind": "negation",
+    "query": "访客能使用令牌删除知识库吗？",
+    "relevance": {
+      "auth-v2.md": 2
+    },
+    "reference_answer": "访客令牌不能删除知识库。",
+    "filters": {
+      "topic": "auth",
+      "version": "v2"
+    }
+  },
+  {
+    "id": "auth-procedure",
+    "family": "auth",
+    "split": "dev",
+    "kind": "procedure",
+    "query": "撤销令牌后网关采取哪些动作？",
+    "relevance": {
+      "auth-流程.md": 2
+    },
+    "reference_answer": "令牌撤销后，网关清理会话并要求重新登录。",
+    "filters": {
+      "topic": "auth",
+      "version": "v2"
+    }
+  },
+  {
+    "id": "auth-cross_version",
+    "family": "auth",
+    "split": "dev",
+    "kind": "cross_version",
+    "query": "访问令牌的v1和v2数量或时长规定分别是什么？",
+    "relevance": {
+      "auth-v2.md": 2,
+      "auth-v1.md": 2
+    },
+    "reference_answer": "访问令牌有效期为十五分钟。 访问令牌有效期为四十五分钟。",
+    "filters": {
+      "topic": "auth"
+    }
+  },
+  {
+    "id": "auth-unanswerable",
+    "family": "auth",
+    "split": "dev",
+    "kind": "unanswerable",
+    "query": "令牌密钥每隔几天轮换？",
+    "relevance": {},
+    "reference_answer": "材料没有提供该信息。",
+    "filters": {
+      "topic": "auth",
+      "version": "v2"
+    }
+  },
+  {
+    "id": "job-direct",
+    "family": "job",
+    "split": "dev",
+    "kind": "direct",
+    "query": "批处理规范v2：一批任务最多处理几个文档？",
+    "relevance": {
+      "job-v2.md": 2
+    },
+    "reference_answer": "单批任务最多包含十八个文档。",
+    "filters": {
+      "topic": "job",
+      "version": "v2"
+    }
+  },
+  {
+    "id": "job-paraphrase",
+    "family": "job",
+    "split": "dev",
+    "kind": "paraphrase",
+    "query": "一次批量操作允许放入多少份材料？",
+    "relevance": {
+      "job-v2.md": 2
+    },
+    "reference_answer": "单批任务最多包含十八个文档。",
+    "filters": {
+      "topic": "job",
+      "version": "v2"
+    }
+  },
+  {
+    "id": "job-negation",
+    "family": "job",
+    "split": "dev",
+    "kind": "negation",
+    "query": "暂停任务会清掉已完成结果吗？",
+    "relevance": {
+      "job-v2.md": 2
+    },
+    "reference_answer": "暂停任务不会删除已完成的结果。",
+    "filters": {
+      "topic": "job",
+      "version": "v2"
+    }
+  },
+  {
+    "id": "job-procedure",
+    "family": "job",
+    "split": "dev",
+    "kind": "procedure",
+    "query": "恢复批处理从哪里开始，失败文档怎么办？",
+    "relevance": {
+      "job-流程.md": 2
+    },
+    "reference_answer": "恢复任务时，从最后一个成功检查点继续，失败文档单独排队。",
+    "filters": {
+      "topic": "job",
+      "version": "v2"
+    }
+  },
+  {
+    "id": "job-cross_version",
+    "family": "job",
+    "split": "dev",
+    "kind": "cross_version",
+    "query": "批处理的v1和v2数量或时长规定分别是什么？",
+    "relevance": {
+      "job-v2.md": 2,
+      "job-v1.md": 2
+    },
+    "reference_answer": "单批任务最多包含六个文档。 单批任务最多包含十八个文档。",
+    "filters": {
+      "topic": "job"
+    }
+  },
+  {
+    "id": "job-unanswerable",
+    "family": "job",
+    "split": "dev",
+    "kind": "unanswerable",
+    "query": "批处理的月度服务费用是多少？",
+    "relevance": {},
+    "reference_answer": "材料没有提供该信息。",
+    "filters": {
+      "topic": "job",
+      "version": "v2"
+    }
+  },
+  {
+    "id": "embedding-direct",
+    "family": "embedding",
+    "split": "dev",
+    "kind": "direct",
+    "query": "向量编码规范v2：向量编码的批大小是多少？",
+    "relevance": {
+      "embedding-v2.md": 2
+    },
+    "reference_answer": "向量编码批大小固定为十六。",
+    "filters": {
+      "topic": "embedding",
+      "version": "v2"
+    }
+  },
+  {
+    "id": "embedding-paraphrase",
+    "family": "embedding",
+    "split": "dev",
+    "kind": "paraphrase",
+    "query": "一次送入编码器的文本数量是多少？",
+    "relevance": {
+      "embedding-v2.md": 2
+    },
+    "reference_answer": "向量编码批大小固定为十六。",
+    "filters": {
+      "topic": "embedding",
+      "version": "v2"
+    }
+  },
+  {
+    "id": "embedding-negation",
+    "family": "embedding",
+    "split": "dev",
+    "kind": "negation",
+    "query": "模型文件缺失时会生成随机向量代替吗？",
+    "relevance": {
+      "embedding-v2.md": 2
+    },
+    "reference_answer": "向量模型缺失时不生成随机向量。",
+    "filters": {
+      "topic": "embedding",
+      "version": "v2"
+    }
+  },
+  {
+    "id": "embedding-procedure",
+    "family": "embedding",
+    "split": "dev",
+    "kind": "procedure",
+    "query": "向量模型缺失时启用什么替代方式并在哪里提示？",
+    "relevance": {
+      "embedding-流程.md": 2
+    },
+    "reference_answer": "模型缺失时启用关键词检索，并在状态页标记降级。",
+    "filters": {
+      "topic": "embedding",
+      "version": "v2"
+    }
+  },
+  {
+    "id": "embedding-cross_version",
+    "family": "embedding",
+    "split": "dev",
+    "kind": "cross_version",
+    "query": "向量编码的v1和v2数量或时长规定分别是什么？",
+    "relevance": {
+      "embedding-v2.md": 2,
+      "embedding-v1.md": 2
+    },
+    "reference_answer": "向量编码批大小固定为八。 向量编码批大小固定为十六。",
+    "filters": {
+      "topic": "embedding"
+    }
+  },
+  {
+    "id": "embedding-unanswerable",
+    "family": "embedding",
+    "split": "dev",
+    "kind": "unanswerable",
+    "query": "向量模型在隐藏测试集的准确率是多少？",
+    "relevance": {},
+    "reference_answer": "材料没有提供该信息。",
+    "filters": {
+      "topic": "embedding",
+      "version": "v2"
+    }
+  },
+  {
+    "id": "backup-direct",
+    "family": "backup",
+    "split": "dev",
+    "kind": "direct",
+    "query": "备份规范v2：备份文件保存多少天？",
+    "relevance": {
+      "backup-v2.md": 2
+    },
+    "reference_answer": "备份保留期为二十一天。",
+    "filters": {
+      "topic": "backup",
+      "version": "v2"
+    }
+  },
+  {
+    "id": "backup-paraphrase",
+    "family": "backup",
+    "split": "dev",
+    "kind": "paraphrase",
+    "query": "历史备份多久之后才会被清理？",
+    "relevance": {
+      "backup-v2.md": 2
+    },
+    "reference_answer": "备份保留期为二十一天。",
+    "filters": {
+      "topic": "backup",
+      "version": "v2"
+    }
+  },
+  {
+    "id": "backup-negation",
+    "family": "backup",
+    "split": "dev",
+    "kind": "negation",
+    "query": "恢复备份会覆盖未保存编辑吗？",
+    "relevance": {
+      "backup-v2.md": 2
+    },
+    "reference_answer": "恢复备份不会覆盖尚未保存的编辑。",
+    "filters": {
+      "topic": "backup",
+      "version": "v2"
+    }
+  },
+  {
+    "id": "backup-procedure",
+    "family": "backup",
+    "split": "dev",
+    "kind": "procedure",
+    "query": "恢复前后怎样保护当前数据并检查备份？",
+    "relevance": {
+      "backup-流程.md": 2
+    },
+    "reference_answer": "恢复前先导出当前快照，校验备份通过后再切换数据库。",
+    "filters": {
+      "topic": "backup",
+      "version": "v2"
+    }
+  },
+  {
+    "id": "backup-cross_version",
+    "family": "backup",
+    "split": "dev",
+    "kind": "cross_version",
+    "query": "备份的v1和v2数量或时长规定分别是什么？",
+    "relevance": {
+      "backup-v2.md": 2,
+      "backup-v1.md": 2
+    },
+    "reference_answer": "备份保留期为七天。 备份保留期为二十一天。",
+    "filters": {
+      "topic": "backup"
+    }
+  },
+  {
+    "id": "backup-unanswerable",
+    "family": "backup",
+    "split": "dev",
+    "kind": "unanswerable",
+    "query": "备份服务器的管理员密码是什么？",
+    "relevance": {},
+    "reference_answer": "材料没有提供该信息。",
+    "filters": {
+      "topic": "backup",
+      "version": "v2"
+    }
+  }
+]

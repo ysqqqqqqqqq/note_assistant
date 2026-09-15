@@ -1,0 +1,488 @@
+[
+  {
+    "id": "index-direct",
+    "family": "index",
+    "split": "test",
+    "kind": "direct",
+    "query": "索引规范v2：增量索引的触发间隔是多少？",
+    "relevance": {
+      "index-v2.md": 2
+    },
+    "reference_answer": "增量索引每九分钟触发一次。",
+    "filters": {
+      "version": "v2"
+    }
+  },
+  {
+    "id": "index-paraphrase",
+    "family": "index",
+    "split": "test",
+    "kind": "paraphrase",
+    "query": "新内容通常隔多久会进入增量构建流程？",
+    "relevance": {
+      "index-v2.md": 2
+    },
+    "reference_answer": "增量索引每九分钟触发一次。",
+    "filters": {
+      "version": "v2"
+    }
+  },
+  {
+    "id": "index-negation",
+    "family": "index",
+    "split": "test",
+    "kind": "negation",
+    "query": "构建失败会替换当前可用索引吗？",
+    "relevance": {
+      "index-v2.md": 2
+    },
+    "reference_answer": "索引构建失败不切换正在服务的旧索引。",
+    "filters": {
+      "version": "v2"
+    }
+  },
+  {
+    "id": "index-procedure",
+    "family": "index",
+    "split": "test",
+    "kind": "procedure",
+    "query": "新索引在什么条件下切换，切换后广播什么？",
+    "relevance": {
+      "index-流程.md": 2
+    },
+    "reference_answer": "新索引通过完整性检查后，才原子切换并广播版本号。",
+    "filters": {
+      "version": "v2"
+    }
+  },
+  {
+    "id": "index-cross_version",
+    "family": "index",
+    "split": "test",
+    "kind": "cross_version",
+    "query": "索引的v1和v2数量或时长规定分别是什么？",
+    "relevance": {
+      "index-v2.md": 2,
+      "index-v1.md": 2
+    },
+    "reference_answer": "增量索引每两分钟触发一次。 增量索引每九分钟触发一次。",
+    "filters": {}
+  },
+  {
+    "id": "index-unanswerable",
+    "family": "index",
+    "split": "test",
+    "kind": "unanswerable",
+    "query": "索引服务器采购价格是多少？",
+    "relevance": {},
+    "reference_answer": "材料没有提供该信息。",
+    "filters": {
+      "version": "v2"
+    }
+  },
+  {
+    "id": "citation-direct",
+    "family": "citation",
+    "split": "test",
+    "kind": "direct",
+    "query": "引用规范v2：一条答案最多展示多少个来源？",
+    "relevance": {
+      "citation-v2.md": 2
+    },
+    "reference_answer": "每条答案最多展示五个来源。",
+    "filters": {
+      "version": "v2"
+    }
+  },
+  {
+    "id": "citation-paraphrase",
+    "family": "citation",
+    "split": "test",
+    "kind": "paraphrase",
+    "query": "回答旁边最多列出几个参考出处？",
+    "relevance": {
+      "citation-v2.md": 2
+    },
+    "reference_answer": "每条答案最多展示五个来源。",
+    "filters": {
+      "version": "v2"
+    }
+  },
+  {
+    "id": "citation-negation",
+    "family": "citation",
+    "split": "test",
+    "kind": "negation",
+    "query": "虚构来源编号可以显示已验证吗？",
+    "relevance": {
+      "citation-v2.md": 2
+    },
+    "reference_answer": "不存在的引用编号不能标为已验证。",
+    "filters": {
+      "version": "v2"
+    }
+  },
+  {
+    "id": "citation-procedure",
+    "family": "citation",
+    "split": "test",
+    "kind": "procedure",
+    "query": "引用检查失败后如何展示回答和问题编号？",
+    "relevance": {
+      "citation-流程.md": 2
+    },
+    "reference_answer": "引用检查失败时保留原回答，但显示未验证标记并列出问题编号。",
+    "filters": {
+      "version": "v2"
+    }
+  },
+  {
+    "id": "citation-cross_version",
+    "family": "citation",
+    "split": "test",
+    "kind": "cross_version",
+    "query": "引用的v1和v2数量或时长规定分别是什么？",
+    "relevance": {
+      "citation-v2.md": 2,
+      "citation-v1.md": 2
+    },
+    "reference_answer": "每条答案最多展示两个来源。 每条答案最多展示五个来源。",
+    "filters": {}
+  },
+  {
+    "id": "citation-unanswerable",
+    "family": "citation",
+    "split": "test",
+    "kind": "unanswerable",
+    "query": "引用系统获得过哪些国际奖项？",
+    "relevance": {},
+    "reference_answer": "材料没有提供该信息。",
+    "filters": {
+      "version": "v2"
+    }
+  },
+  {
+    "id": "filter-direct",
+    "family": "filter",
+    "split": "test",
+    "kind": "direct",
+    "query": "过滤规范v2：文件过滤最多选择几个文件名？",
+    "relevance": {
+      "filter-v2.md": 2
+    },
+    "reference_answer": "文件过滤最多同时选择七个文件名。",
+    "filters": {
+      "version": "v2"
+    }
+  },
+  {
+    "id": "filter-paraphrase",
+    "family": "filter",
+    "split": "test",
+    "kind": "paraphrase",
+    "query": "限定资料范围时一次可以勾选几份文件？",
+    "relevance": {
+      "filter-v2.md": 2
+    },
+    "reference_answer": "文件过滤最多同时选择七个文件名。",
+    "filters": {
+      "version": "v2"
+    }
+  },
+  {
+    "id": "filter-negation",
+    "family": "filter",
+    "split": "test",
+    "kind": "negation",
+    "query": "没有过滤条件时能跳过权限检查吗？",
+    "relevance": {
+      "filter-v2.md": 2
+    },
+    "reference_answer": "过滤条件为空不代表跳过权限检查。",
+    "filters": {
+      "version": "v2"
+    }
+  },
+  {
+    "id": "filter-procedure",
+    "family": "filter",
+    "split": "test",
+    "kind": "procedure",
+    "query": "权限过滤在排序之前还是之后执行？",
+    "relevance": {
+      "filter-流程.md": 2
+    },
+    "reference_answer": "权限过滤先于相似度排序执行，被拒绝的文档不进入候选集合。",
+    "filters": {
+      "version": "v2"
+    }
+  },
+  {
+    "id": "filter-cross_version",
+    "family": "filter",
+    "split": "test",
+    "kind": "cross_version",
+    "query": "过滤的v1和v2数量或时长规定分别是什么？",
+    "relevance": {
+      "filter-v2.md": 2,
+      "filter-v1.md": 2
+    },
+    "reference_answer": "文件过滤最多同时选择三个文件名。 文件过滤最多同时选择七个文件名。",
+    "filters": {}
+  },
+  {
+    "id": "filter-unanswerable",
+    "family": "filter",
+    "split": "test",
+    "kind": "unanswerable",
+    "query": "过滤模块的源代码有多少行？",
+    "relevance": {},
+    "reference_answer": "材料没有提供该信息。",
+    "filters": {
+      "version": "v2"
+    }
+  },
+  {
+    "id": "export-direct",
+    "family": "export",
+    "split": "test",
+    "kind": "direct",
+    "query": "导出规范v2：一次最多导出多少张批注卡片？",
+    "relevance": {
+      "export-v2.md": 2
+    },
+    "reference_answer": "单次导出最多包含三十张批注卡片。",
+    "filters": {
+      "version": "v2"
+    }
+  },
+  {
+    "id": "export-paraphrase",
+    "family": "export",
+    "split": "test",
+    "kind": "paraphrase",
+    "query": "打包导出一批注释时数量上限是多少？",
+    "relevance": {
+      "export-v2.md": 2
+    },
+    "reference_answer": "单次导出最多包含三十张批注卡片。",
+    "filters": {
+      "version": "v2"
+    }
+  },
+  {
+    "id": "export-negation",
+    "family": "export",
+    "split": "test",
+    "kind": "negation",
+    "query": "导出失败会丢失当前编辑内容吗？",
+    "relevance": {
+      "export-v2.md": 2
+    },
+    "reference_answer": "导出失败不会清空当前编辑内容。",
+    "filters": {
+      "version": "v2"
+    }
+  },
+  {
+    "id": "export-procedure",
+    "family": "export",
+    "split": "test",
+    "kind": "procedure",
+    "query": "导出过程中何时替换目标文件？",
+    "relevance": {
+      "export-流程.md": 2
+    },
+    "reference_answer": "导出先保存临时文件，校验成功后才替换目标文件。",
+    "filters": {
+      "version": "v2"
+    }
+  },
+  {
+    "id": "export-cross_version",
+    "family": "export",
+    "split": "test",
+    "kind": "cross_version",
+    "query": "导出的v1和v2数量或时长规定分别是什么？",
+    "relevance": {
+      "export-v2.md": 2,
+      "export-v1.md": 2
+    },
+    "reference_answer": "单次导出最多包含十张批注卡片。 单次导出最多包含三十张批注卡片。",
+    "filters": {}
+  },
+  {
+    "id": "export-unanswerable",
+    "family": "export",
+    "split": "test",
+    "kind": "unanswerable",
+    "query": "导出文件的平均压缩率是多少？",
+    "relevance": {},
+    "reference_answer": "材料没有提供该信息。",
+    "filters": {
+      "version": "v2"
+    }
+  },
+  {
+    "id": "rewrite-direct",
+    "family": "rewrite",
+    "split": "test",
+    "kind": "direct",
+    "query": "查询改写规范v2：一个问题最多生成几条改写？",
+    "relevance": {
+      "rewrite-v2.md": 2
+    },
+    "reference_answer": "每个问题最多生成两条改写。",
+    "filters": {
+      "version": "v2"
+    }
+  },
+  {
+    "id": "rewrite-paraphrase",
+    "family": "rewrite",
+    "split": "test",
+    "kind": "paraphrase",
+    "query": "系统会为一条检索问题准备多少种额外问法？",
+    "relevance": {
+      "rewrite-v2.md": 2
+    },
+    "reference_answer": "每个问题最多生成两条改写。",
+    "filters": {
+      "version": "v2"
+    }
+  },
+  {
+    "id": "rewrite-negation",
+    "family": "rewrite",
+    "split": "test",
+    "kind": "negation",
+    "query": "改写能把不允许改成允许吗？",
+    "relevance": {
+      "rewrite-v2.md": 2
+    },
+    "reference_answer": "查询改写不得改变原问题中的否定条件。",
+    "filters": {
+      "version": "v2"
+    }
+  },
+  {
+    "id": "rewrite-procedure",
+    "family": "rewrite",
+    "split": "test",
+    "kind": "procedure",
+    "query": "改写服务超时后是否继续检索以及如何提示？",
+    "relevance": {
+      "rewrite-流程.md": 2
+    },
+    "reference_answer": "改写服务超时后保留原问题直接检索，并标记改写失败。",
+    "filters": {
+      "version": "v2"
+    }
+  },
+  {
+    "id": "rewrite-cross_version",
+    "family": "rewrite",
+    "split": "test",
+    "kind": "cross_version",
+    "query": "查询改写的v1和v2数量或时长规定分别是什么？",
+    "relevance": {
+      "rewrite-v2.md": 2,
+      "rewrite-v1.md": 2
+    },
+    "reference_answer": "每个问题最多生成一条改写。 每个问题最多生成两条改写。",
+    "filters": {}
+  },
+  {
+    "id": "rewrite-unanswerable",
+    "family": "rewrite",
+    "split": "test",
+    "kind": "unanswerable",
+    "query": "查询改写每天消耗多少度电？",
+    "relevance": {},
+    "reference_answer": "材料没有提供该信息。",
+    "filters": {
+      "version": "v2"
+    }
+  },
+  {
+    "id": "rerank-direct",
+    "family": "rerank",
+    "split": "test",
+    "kind": "direct",
+    "query": "候选重排规范v2：最多送入多少个片段进行重排？",
+    "relevance": {
+      "rerank-v2.md": 2
+    },
+    "reference_answer": "重排候选上限为二十四个片段。",
+    "filters": {
+      "version": "v2"
+    }
+  },
+  {
+    "id": "rerank-paraphrase",
+    "family": "rerank",
+    "split": "test",
+    "kind": "paraphrase",
+    "query": "重新排列召回结果时最多比较多少段资料？",
+    "relevance": {
+      "rerank-v2.md": 2
+    },
+    "reference_answer": "重排候选上限为二十四个片段。",
+    "filters": {
+      "version": "v2"
+    }
+  },
+  {
+    "id": "rerank-negation",
+    "family": "rerank",
+    "split": "test",
+    "kind": "negation",
+    "query": "重排出错会自动发送到外部搜索吗？",
+    "relevance": {
+      "rerank-v2.md": 2
+    },
+    "reference_answer": "重排错误不会自动改用外部搜索引擎。",
+    "filters": {
+      "version": "v2"
+    }
+  },
+  {
+    "id": "rerank-procedure",
+    "family": "rerank",
+    "split": "test",
+    "kind": "procedure",
+    "query": "重排器异常时使用什么排序并如何告知用户？",
+    "relevance": {
+      "rerank-流程.md": 2
+    },
+    "reference_answer": "重排器异常时沿用融合排序，并在返回结果中注明异常。",
+    "filters": {
+      "version": "v2"
+    }
+  },
+  {
+    "id": "rerank-cross_version",
+    "family": "rerank",
+    "split": "test",
+    "kind": "cross_version",
+    "query": "候选重排的v1和v2数量或时长规定分别是什么？",
+    "relevance": {
+      "rerank-v2.md": 2,
+      "rerank-v1.md": 2
+    },
+    "reference_answer": "重排候选上限为八个片段。 重排候选上限为二十四个片段。",
+    "filters": {}
+  },
+  {
+    "id": "rerank-unanswerable",
+    "family": "rerank",
+    "split": "test",
+    "kind": "unanswerable",
+    "query": "重排服务的负责人手机号码是什么？",
+    "relevance": {},
+    "reference_answer": "材料没有提供该信息。",
+    "filters": {
+      "version": "v2"
+    }
+  }
+]

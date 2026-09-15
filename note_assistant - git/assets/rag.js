@@ -1,3 +1,4 @@
+function ragMessage(zh,en) { return typeof _lang !== 'undefined' && _lang === 'en' ? en : zh; }
 /* ═══════════════════════════════════════════════════════
  * RAG Knowledge Base Engine
  * - Embedding: @xenova/transformers (all-MiniLM-L6-v2)
@@ -57,7 +58,7 @@ async function ragInitEmbedder(onProgress) {
  * @returns {Promise<Float32Array>} 嵌入向量
  */
 async function ragEmbedText(text) {
-  if (!_embedder) throw new Error('嵌入模型未初始化');
+  if (!_embedder) throw new Error(ragMessage('嵌入模型未初始化','Embedding model is not initialized'));
   var output = await _embedder(text, { pooling: 'mean', normalize: true });
   return new Float32Array(output.data);
 }
@@ -68,7 +69,7 @@ async function ragEmbedText(text) {
  * @returns {Promise<Float32Array[]>} 嵌入向量数组
  */
 async function ragEmbedBatch(texts) {
-  if (!_embedder) throw new Error('嵌入模型未初始化');
+  if (!_embedder) throw new Error(ragMessage('嵌入模型未初始化','Embedding model is not initialized'));
   var results = [];
   for (var i = 0; i < texts.length; i++) {
     var vec = await ragEmbedText(texts[i]);
@@ -89,50 +90,21 @@ async function ragEmbedBatch(texts) {
  * @returns {string[]} 分块数组
  */
 function ragChunkText(text, chunkSize, overlap) {
-  chunkSize = chunkSize || RAG_CHUNK_SIZE;
-  overlap = overlap || RAG_CHUNK_OVERLAP;
-  if (!text || !text.trim()) return [];
-
-  // 先按段落分割
-  var paragraphs = text.split(/\n\s*\n/).filter(function(p) { return p.trim(); });
-  var chunks = [];
-  var currentChunk = '';
-
-  for (var i = 0; i < paragraphs.length; i++) {
-    var para = paragraphs[i].trim();
-    if (!para) continue;
-
-    // 如果单段落超过 chunkSize，强制按句号/句号分割
-    if (para.length > chunkSize) {
-      if (currentChunk) { chunks.push(currentChunk.trim()); currentChunk = ''; }
-      var sentences = para.split(/(?<=[。！？.!?\n])/);
-      var sentChunk = '';
-      for (var j = 0; j < sentences.length; j++) {
-        if ((sentChunk + sentences[j]).length > chunkSize) {
-          if (sentChunk) chunks.push(sentChunk.trim());
-          sentChunk = sentences[j];
-        } else {
-          sentChunk += sentences[j];
-        }
-      }
-      if (sentChunk.trim()) currentChunk = sentChunk.trim();
-      continue;
+  chunkSize = chunkSize === undefined ? RAG_CHUNK_SIZE : chunkSize;
+  overlap = overlap === undefined ? RAG_CHUNK_OVERLAP : overlap;
+  if (chunkSize < 1 || overlap < 0 || overlap >= chunkSize) throw new Error('Invalid chunk size / overlap');
+  var chunks = [], start = 0;
+  while (start < text.length) {
+    var end = Math.min(start + chunkSize, text.length);
+    if (end < text.length) {
+      var windowText = text.slice(start,end), matches = Array.from(windowText.matchAll(/[。！？.!?\n]/g));
+      var good = matches.filter(function(m){return m.index+1 > Math.max(overlap,chunkSize/2);});
+      if (good.length) end = start + good[good.length-1].index + 1;
     }
-
-    // 累加段落，超过 chunkSize 则切块
-    if ((currentChunk + '\n' + para).length > chunkSize && currentChunk) {
-      chunks.push(currentChunk.trim());
-      // 重叠窗口：保留上一块尾部内容
-      if (overlap > 0 && currentChunk.length > overlap) {
-        currentChunk = currentChunk.slice(-overlap) + '\n' + para;
-      } else {
-        currentChunk = para;
-      }
-    } else {
-      currentChunk = currentChunk ? currentChunk + '\n' + para : para;
-    }
+    if (text.slice(start,end).trim()) chunks.push(text.slice(start,end));
+    if (end === text.length) break;
+    start = end-overlap;
   }
-  if (currentChunk.trim()) chunks.push(currentChunk.trim());
   return chunks;
 }
 
@@ -170,22 +142,19 @@ async function ragStoreChunks(filename, chunks, vectors) {
   var chunkStore = tx.objectStore('chunks');
   var docStore = tx.objectStore('documents');
 
-  // 存储文档元信息
-  docStore.put({
-    filename: filename,
-    chunks: chunks.length,
-    uploadedAt: new Date().toISOString()
-  });
-
-  // 存储每个分块及其向量
-  for (var i = 0; i < chunks.length; i++) {
-    chunkStore.add({
-      text: chunks[i],
-      embedding: Array.from(vectors[i]),
-      sourceFile: filename,
-      createdAt: new Date().toISOString()
+  var cursorRequest = chunkStore.openCursor();
+  cursorRequest.onsuccess = function () {
+    var cursor = cursorRequest.result;
+    if (cursor) {
+      if (cursor.value.sourceFile === filename) cursor.delete();
+      cursor.continue();
+      return;
+    }
+    docStore.put({filename:filename,chunks:chunks.length,uploadedAt:new Date().toISOString()});
+    chunks.forEach(function(text,i) {
+      chunkStore.add({text:text,embedding:Array.from(vectors[i]),sourceFile:filename,createdAt:new Date().toISOString()});
     });
-  }
+  };
 
   return new Promise(function(resolve, reject) {
     tx.oncomplete = function() { resolve(); };
@@ -282,6 +251,7 @@ async function ragRetrieve(query, topN) {
   var totalChunks = await ragGetTotalChunks();
   if (totalChunks === 0) return '';
 
+  await ragInitEmbedder();
   // 计算查询向量
   var queryVec = await ragEmbedText(query);
 
@@ -301,13 +271,13 @@ async function ragRetrieve(query, topN) {
   var scored = allChunks.map(function(chunk) {
     var vec = new Float32Array(chunk.embedding);
     var sim = cosineSimilarity(queryVec, vec);
-    return { text: chunk.text, score: sim };
+    return { text: chunk.text, source:chunk.sourceFile, score: sim };
   });
   scored.sort(function(a, b) { return b.score - a.score; });
 
   // 取 top-N 拼接
   var topChunks = scored.slice(0, topN);
-  return topChunks.map(function(c) { return c.text; }).join('\n\n---\n\n');
+  return topChunks.map(function(c,i) { return '[S'+(i+1)+'] '+c.source+'\n'+c.text; }).join('\n\n---\n\n');
 }
 
 /**
@@ -362,24 +332,24 @@ function ragReadFileText(file) {
 async function ragUploadFile(file, onProgress) {
   // 文件大小检查
   if (file.size > RAG_MAX_FILE_SIZE) {
-    throw new Error('文件过大（' + (file.size / 1024 / 1024).toFixed(1) + 'MB），建议不超过 5MB');
+    throw new Error(ragMessage('文件过大，建议不超过 5MB','File is too large; maximum recommended size is 5MB'));
   }
 
   // 1. 读取文件
-  if (onProgress) onProgress({ stage: 'reading', message: '正在读取文件…' });
+  if (onProgress) onProgress({ stage: 'reading', message: ragMessage('正在读取文件…','Reading file…') });
   var text = await ragReadFileText(file);
-  if (!text || !text.trim()) throw new Error('文件内容为空');
+  if (!text || !text.trim()) throw new Error(ragMessage('文件内容为空','File is empty'));
 
   // 2. 分块
-  if (onProgress) onProgress({ stage: 'chunking', message: '正在分块…' });
+  if (onProgress) onProgress({ stage: 'chunking', message: ragMessage('正在分块…','Splitting into chunks…') });
   var chunks = ragChunkText(text);
-  if (!chunks.length) throw new Error('文件分块结果为空');
+  if (!chunks.length) throw new Error(ragMessage('文件分块结果为空','No text chunks found'));
 
   // 3. 加载嵌入模型
-  if (onProgress) onProgress({ stage: 'embedding', progress: 0, message: '正在计算嵌入向量…' });
+  if (onProgress) onProgress({ stage: 'embedding', progress: 0, message: ragMessage('正在计算嵌入向量…','Computing embeddings…') });
   await ragInitEmbedder(function(p) {
     if (onProgress && p.status === 'downloading') {
-      onProgress({ stage: 'embedding', progress: p.progress, message: '嵌入模型下载中 ' + p.progress + '%' });
+      onProgress({ stage: 'embedding', progress: p.progress, message: ragMessage('嵌入模型下载中 ','Downloading embedding model ') + p.progress + '%' });
     }
   });
 
@@ -390,12 +360,12 @@ async function ragUploadFile(file, onProgress) {
     vectors.push(vec);
     if (onProgress) {
       var pct = Math.round(((i + 1) / chunks.length) * 100);
-      onProgress({ stage: 'embedding', progress: pct, message: '嵌入计算 ' + pct + '% (' + (i + 1) + '/' + chunks.length + ')' });
+      onProgress({ stage: 'embedding', progress: pct, message: ragMessage('嵌入计算 ','Embedding progress ') + pct + '% (' + (i + 1) + '/' + chunks.length + ')' });
     }
   }
 
   // 5. 存储到 IndexedDB
-  if (onProgress) onProgress({ stage: 'storing', message: '正在保存到本地数据库…' });
+  if (onProgress) onProgress({ stage: 'storing', message: ragMessage('正在保存到本地数据库…','Saving to local database…') });
   await ragStoreChunks(file.name, chunks, vectors);
 
   return { filename: file.name, chunks: chunks.length };

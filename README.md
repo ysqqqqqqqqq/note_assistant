@@ -1,159 +1,82 @@
-# Note Annotation Tool / 笔记智能批注工具
+# Note Assistant
 
-A privacy-first, browser-based note annotation tool with AI-powered term extraction and RAG-enhanced explanations. All data stays in your browser — nothing is uploaded to any server.
+面向技术笔记的检索增强批注应用。保留笔记编辑、手工批注、历史记录、PNG/Word 导出和中英切换，增加本机混合检索、来源证据与流式批注。
 
-一款隐私优先的浏览器端笔记批注工具，支持 AI 术语提取与 RAG 知识库增强释义。所有数据保存在浏览器本地，不会上传任何内容到外部服务器。
+## 运行
 
-## Features / 功能
+需要 Python 3.10+。在仓库根目录执行：
 
-- **AI Annotation** — Automatically extracts technical terms and key sentences, generates explanations via LLM API
-- **RAG Knowledge Base** — Upload documents to build a local vector knowledge base; annotations prioritize local KB context before falling back to LLM
-- **Text Denoise** — Clean up speech-to-text artifacts (filler words, transitions)
-- **Manual Annotations** — Add custom term/sentence annotations with your own explanations
-- **Note History** — Save notes to browser-local SQLite (sql.js + IndexedDB); search, edit titles, load previous notes
-- **Export** — Export annotated notes as PNG image or Word (.docx) document
-- **Bilingual UI** — Chinese / English interface switch
-- **Theme Colors** — 5 built-in theme colors (blue, green, pink, black, red)
-- **Privacy First** — Zero tracking, zero telemetry, all data in browser IndexedDB
-
-## Quick Start / 快速开始
-
-### Pure Frontend Mode / 纯前端模式
-
-> **Important**: You must use a local HTTP server. Opening `index.html` directly via `file://` will not work due to browser security restrictions on WASM and ES modules.
->
-> **重要**：必须通过本地 HTTP 服务器访问。直接双击 `index.html` 打开会因浏览器安全限制导致 WASM 和 ES 模块无法加载。
-
-1. Clone or download this repository
-2. Start a local HTTP server:
-   ```bash
-   python -m http.server 8080
-   ```
-3. Open `http://localhost:8080` in a modern browser (Chrome / Edge / Firefox recommended)
-4. Click the **Settings** (⚙) button to configure your LLM API:
-   - **API Base URL** — e.g. `https://dashscope.aliyuncs.com/compatible-mode/v1`
-   - **API Key** — your LLM provider's API key
-   - **Model Name** — e.g. `qwen-plus`, `gpt-4o`, etc.
-5. Start using!
-
-### Backend Mode (Advanced RAG) / 后端模式
-
-For enhanced RAG with ChromaDB vector store:
-
-1. Copy `.env.example` to `.env` and fill in your API key
-2. Install dependencies: `pip install -r requirements.txt`
-3. Run: `python server.py`
-4. Open `http://127.0.0.1:5000` in your browser
-
-## Knowledge Base / 知识库
-
-The built-in RAG knowledge base runs entirely in the browser:
-
-1. Click the **Knowledge Base** (📚) button
-2. Upload `.txt`, `.md`, or `.csv` files
-3. The tool will chunk text, compute embeddings (via `@xenova/transformers`), and store vectors locally
-4. When generating annotations, relevant KB context is retrieved and used to enhance explanations
-
-### Embedding Model Setup / 嵌入模型配置
-
-The RAG feature requires a local embedding model. Download the model files and place them in the following directory structure:
-
-RAG 功能需要本地嵌入模型。请下载模型文件并按以下目录结构放置：
-
-```
-assets/models/Xenova/all-MiniLM-L6-v2/
-├── config.json
-├── tokenizer.json
-├── tokenizer_config.json
-── model.json
+```powershell
+cd "note_assistant - git"
+python -m venv .venv
+.\.venv\Scripts\python -m pip install -r requirements.txt
+.\.venv\Scripts\python server.py
 ```
 
-Download from: https://huggingface.co/Xenova/all-MiniLM-L6-v2/tree/main
+打开 http://127.0.0.1:5000 。页面设置中填写兼容 Chat Completions 的 API 地址、模型名和自己的 Key。曾验证智谱地址 `https://open.bigmodel.cn/api/paas/v4`、模型 `glm-4-flash-250414`；实际可用性取决于服务商。
 
-> **Note**: The model is ~30MB. Once loaded, it is cached by the browser for offline use.
->
-> **提示**：模型约 30MB。首次加载后浏览器会缓存，后续可离线使用。
+开启“优先使用本地 RAG 知识库”和“本机增强检索”，在知识库面板上传文档；不配置生成模型也能测试检索。默认未启用向量和重排模型时使用 BM25。浏览器原有库与本机服务库独立，不会自动迁移。
 
-### Clear Knowledge Base
+## 可选中文 BGE
 
-Click the **"Clear KB"** button in the knowledge base panel to delete all local vector data.
-
-## Project Structure / 项目结构
-
-```
-./
-├── index.html              # Main application (HTML + CSS)
-├── assets/
-│   ├── app.js              # Core application logic
-│   ├── rag.js              # RAG knowledge base engine
-│   ├── html-to-image.min.js
-│   ├── sql-wasm.js
-│   ├── sql-wasm.wasm
-│   ├── docx.umd.js
-│   ── models/             # Embedding model (download separately)
-│       └── Xenova/
-│           └── all-MiniLM-L6-v2/
-├── server.py               # (Optional) Flask backend for advanced RAG
-├── main.py                 # (Optional) Standalone RAG pipeline script
-├── requirements.txt        # Python dependencies (for backend mode)
-├── .env.example            # Environment variable template
-├── .gitignore
-└── LICENSE
+```powershell
+.\.venv\Scripts\python -m pip install -r requirements-models.txt
 ```
 
-## Configuration / 配置
+准备 `BAAI/bge-small-zh-v1.5` 和可选的 `BAAI/bge-reranker-base` 权重，放在应用目录的 `models/` 下，或把示例配置中的路径改成自己的本地路径。权重不包含在仓库内。
 
-### Frontend Settings (in-browser)
+选择一种配置复制为 `.env`，已有配置时先备份，修改后重启服务：
 
-All API configuration is done through the Settings panel in the browser UI:
+- `.env.bge-recall.example`：BGE Dense + BM25，侧重召回。
+- `.env.bge-cautious.example`：加入重排和分数阈值0；阈值需要针对数据校准。
+- `.env.bge-adaptive.example`：满足排序一致条件时跳过重排，未配置拒答阈值。
 
-| Setting | Description | Default |
-|---------|-------------|---------|
-| API Base URL | LLM API endpoint | `https://dashscope.aliyuncs.com/compatible-mode/v1` |
-| API Key | Your API key (stored in localStorage only) | *(empty)* |
-| Model Name | LLM model identifier | `qwen-plus` |
-| RAG Enabled | Prioritize local KB for explanations | `false` |
-| Top-N | Number of KB chunks to retrieve | `3` |
+`.env.example` 提供基础配置。页面设置与后端 `/annotate` 配置独立；后端历史变量名为 `DASHSCOPE_API_KEY`，接口和模型由 `LLM_API_BASE`、`LLM_MODEL` 控制。评测脚本 `answer_pilot.py` 使用 `ZHIPU_API_KEY`，不要把真实值提交到 Git。
 
-### Backend Configuration
+## 架构
 
-For backend mode, copy `.env.example` to `.env`:
-
+```text
+原页面 → rag-backend.js → Flask → 模块化 Pipeline
+文档 → 边界切片和偏移 → SQLite
+查询 → 原查询和可选改写 → 元数据过滤 → BM25 + Dense
+     → RRF 融合 → 可选 Cross-encoder 重排和阈值检查
+     → 去重和可选邻块 → 原文压缩 → 来源编号与 trace
+     → 模型流式批注 → 引用编号检查和可展开证据
 ```
-DASHSCOPE_API_KEY=your-api-key-here
+
+- 查询改写保留原问题，保护部分标识符和数字，改写总权重受限。
+- 元数据过滤先于排序；它不是完整用户认证或权限系统。
+- 精确保存摘录区间，同源邻块合并时检查重叠一致性，并扣除重复引用区间。
+- `RAG_TOP_K`、`RAG_CANDIDATE_K`、`RAG_CONTEXT_CHARS` 等可配置。
+- `RAG_NEIGHBOR_CHUNKS=0/1/2` 控制邻块补全，默认0。
+- `RAG_RERANK_MODE=always/adaptive` 控制重排；有拒答阈值时不能跳过校验。
+- 谨慎模式下模型缺失、推理失败、异常分数或语言不适配会停止生成，返回 `verification_unavailable`；无候选则返回 `no_evidence`。普通无阈值模式保留检索回退。
+- 解释卡片支持 SSE 增量显示、取消和未完成标记。后端 `/annotate` 仍返回 JSON。
+
+## 接口与代码
+
+`/kb/upload`、`/kb/list`、`/kb/delete`、`/kb/clear` 管理本机库；`/rag/search` 返回检索结果；`/rag/status` 返回模型与运行状态。
+
+`rag_engine/` 包含配置、分词、BM25、查询、策略、引用和管线；`assets/` 包含页面、后端适配器及流式解析。服务默认绑定本机回环地址，不建议直接公开暴露。
+
+## 测试与评测
+
+在应用目录运行：
+
+```powershell
+python -m unittest discover -s tests
+node --test tests/stream.test.cjs tests/browser.test.cjs tests/adapter.test.cjs
+python chinese_benchmark.py --dense ./models/bge-small-zh-v1.5 --reranker ./models/bge-reranker-base --out ./outputs/chinese
 ```
 
-## Privacy / 隐私说明
+最近验证：41 项 Python 和10项 JavaScript测试通过；真实BGE HTTP检索检查通过。中文合成数据在 `eval/chinese_v2`，含36篇文档、开发集与测试集各36题，哈希用于检测文件变更。已反复使用的测试数据属于回归集，不是新盲测。
 
-- **No tracking** — Zero analytics, telemetry, or user data collection
-- **Local storage only** — All notes, history, and knowledge base data are stored in your browser's IndexedDB
-- **No auto-upload** — Text content is only sent to the LLM API you explicitly configure
-- **Clear data** — Clearing browser site data will erase all local databases
-- **API keys** — Stored in browser localStorage only, never embedded in source code
+详细实验结论见 [docs/EVALUATION.md](docs/EVALUATION.md)。不得把小样本正确率当成真实用户总体准确率，也不得把引用编号合法当成事实支持保证。
 
-## Browser Compatibility / 浏览器兼容性
+## 局限和数据边界
 
-- Chrome 90+ / Edge 90+ / Firefox 90+ (recommended)
-- Requires IndexedDB and WebAssembly support
-- **Must be served via HTTP** — `file://` protocol will not work due to browser security restrictions on WASM and ES modules
+当前主要适合个人小知识库：仍全量扫描候选，向量缓存不持久化，更新文档会较广泛清缓存，推理期间的锁限制并发。尚无生产规模验证。引用只检查来源编号，尚未完整核验逐句事实或组合引用。
 
-## License / 开源协议
+笔记历史及页面 API 设置存于浏览器，本机知识库存在本地 SQLite。调用外部生成或改写模型会发送相应笔记片段或查询。仓库不包含真实密钥、私人笔记、数据库、日志、模型权重或个人简历。
 
-MIT License
-
-Copyright (c) 2024
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-## Third-party Dependencies / 第三方依赖
-
-| Library | License | Purpose |
-|---------|---------|---------|
-| [sql.js](https://github.com/sql-js/sql.js) | MIT | SQLite in browser |
-| [html-to-image](https://github.com/bubkoo/html-to-image) | MIT | PNG export |
-| [docx](https://github.com/dolanmiu/docx) | MIT | Word export |
-| [@xenova/transformers](https://github.com/xenova/transformers.js) | Apache 2.0 | Browser embeddings |
+许可证见 [LICENSE](note_assistant%20-%20git/LICENSE)。

@@ -1,0 +1,23 @@
+# Credentials and local state
+.env
+.env.*
+!.env*.example
+*.sqlite3
+*.sqlite3-*
+*.db
+*.db-*
+*.log
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+models/
+model-cache/
+.cache/
+outputs/
+uploads/
+private_notes/
+*.pem
+*.key
+.DS_Store
+Thumbs.db

@@ -193,7 +193,7 @@
       font-size:14px; font-weight:600; color:#333; margin-bottom:8px;
       padding:6px 10px; background:#f8f9fa; border-radius:4px; line-height:1.6; word-break:break-all;
     }
-    .card-explanation { font-size:13px; color:#666; line-height:1.7; border-top:1px dashed #eee; padding-top:8px; }
+    .card-explanation { white-space:pre-wrap; font-size:13px; color:#666; line-height:1.7; border-top:1px dashed #eee; padding-top:8px; }
     .card-close-btn {
       position:absolute; top:8px; right:8px;
       width:20px; height:20px; border:none; background:transparent;
@@ -249,9 +249,9 @@
       text-align:center; color:#bbb; padding:40px 16px; font-size:13px; line-height:1.8;
     }
     .history-empty .empty-icon { display:block; font-size:28px; margin-bottom:8px; opacity:.6; }
-    
+
     /* ── 知识库弹窗 ─────────────────────── */
-    #kbModal .modal-box { min-width:420px; max-width:560px; max-height:80vh; display:flex; flex-direction:column; }
+    #kbModal .modal-box { overflow-y:auto; min-width:420px; max-width:560px; max-height:80vh; display:flex; flex-direction:column; }
     .kb-upload-area {
       border:2px dashed #d0d5dd; border-radius:8px; padding:20px; text-align:center;
       margin-bottom:14px; cursor:pointer; transition:all .15s; background:#fafbfc;
@@ -294,6 +294,7 @@
       .annotation-card::before, .annotation-card::after { display:none; }
     }
   </style>
+  <link rel="stylesheet" href="./assets/ui.css">
 </head>
 <body>
 
@@ -306,10 +307,12 @@
         <button class="settings-btn" onclick="toggleSettings()" title="Settings" data-i18n-title="settingsTitle">⚙</button>
       </div>
     </div>
+    <div class="workspace-intro"><b data-i18n="workspace">笔记工作台</b> <span data-i18n="workspaceHint">记录 · 理解 · 沉淀</span></div>
     <label class="editor-label" for="note-input" data-i18n="editorLabel">编辑笔记文本</label>
-    <textarea id="note-input" placeholder="请输入或粘贴笔记内容 …"></textarea>
+    <textarea id="note-input" data-i18n-placeholder="notePlaceholder" placeholder="请输入或粘贴笔记内容 …"></textarea>
     <div class="btn-bar">
       <button class="btn btn-primary" onclick="regenerateAnnotations()" data-i18n="btnGenerate">生成批注</button>
+      <button id="stop-generation" class="btn btn-danger" onclick="stopGeneration()" data-i18n="stop" hidden>停止</button>
       <button class="btn btn-tertiary" onclick="textDenoise()" data-i18n="btnDenoise">文本降噪</button>
       <button class="btn btn-tertiary" onclick="pasteFromClipboard()" data-i18n="btnPaste">从剪贴板粘贴</button>
       <button class="btn btn-tertiary" onclick="clearText()" data-i18n="btnClear">清除文本</button>
@@ -318,6 +321,7 @@
     </div>
   </div>
 
+  <div id="generation-status" role="status" aria-live="polite"></div>
   <div class="main-content" id="main-content">
     <div class="preview-panel">
       <h3 data-i18n="previewTitle">笔记预览</h3>
@@ -481,6 +485,9 @@
   </div>
 
   <script src="./assets/rag.js"></script>
+  <script src="./assets/rag-quality.js"></script>
+  <script src="./assets/stream.js"></script>
   <script src="./assets/app.js"></script>
+  <script src="./assets/rag-backend.js"></script>
 </body>
 </html>
