@@ -302,6 +302,7 @@
     <div class="page-header">
       <div class="page-title" data-i18n="title">笔记智能批注工具</div>
       <div style="display:flex;gap:8px;align-items:center;">
+        <button class="settings-btn voice-header-button" id="voice-open" type="button" title="录音 / 上传音频" aria-label="录音 / 上传音频">🎙 录音</button>
         <button class="settings-btn" onclick="toggleKB()" title="Knowledge Base" data-i18n-title="btnKB">📚</button>
         <button class="settings-btn" onclick="toggleHistory()" title="History" data-i18n-title="btnHistory">📋</button>
         <button class="settings-btn" onclick="toggleSettings()" title="Settings" data-i18n-title="settingsTitle">⚙</button>
@@ -318,6 +319,46 @@
       <button class="btn btn-tertiary" onclick="clearText()" data-i18n="btnClear">清除文本</button>
       <button class="btn btn-tertiary btn-push-right" onclick="saveNote()" data-i18n="btnSaveNote">保存笔记</button>
       <button class="btn btn-secondary" onclick="toggleExportModal()" data-i18n="btnExport">导出</button>
+    </div>
+  </div>
+  <div id="voice-panel" class="modal-overlay voice-panel" aria-label="录音转文字" role="dialog" aria-modal="true" hidden>
+    <div class="modal-box voice-dialog">
+      <button class="modal-close" id="voice-close" type="button" aria-label="关闭">&times;</button>
+      <div class="modal-title">语音输入</div>
+      <div class="voice-source-actions">
+        <button class="btn btn-tertiary" id="voice-start" type="button">🎙 开始录音</button>
+        <button class="btn btn-tertiary" id="voice-upload-trigger" type="button">上传录音</button>
+        <input id="voice-upload" type="file" accept=".mp3,.wav,.m4a,.mp4,.webm,.ogg,audio/*" hidden>
+      </div>
+      <div id="voice-mic-row" class="voice-mic-row" hidden>
+        <label for="voice-mic-select">麦克风</label>
+        <select id="voice-mic-select" class="setting-input"><option value="">系统默认麦克风</option></select>
+      </div>
+      <div id="voice-mic-current" class="voice-mic-current" hidden></div>
+      <div id="voice-input-monitor" class="voice-input-monitor" hidden>
+        <span>输入音量</span><meter id="voice-input-level" min="0" max="1" value="0"></meter>
+        <span id="voice-input-hint">检测中…</span>
+      </div>
+      <div id="voice-file-details" class="voice-file-details" hidden></div>
+      <div class="voice-controls">
+        <span id="voice-state" class="voice-state">未录音</span>
+        <span id="voice-duration" class="voice-duration">00:00</span>
+        <button class="btn btn-tertiary" id="voice-pause" type="button" hidden>暂停</button>
+        <button class="btn btn-primary" id="voice-finish" type="button" hidden>完成</button>
+        <button class="btn btn-tertiary" id="voice-cancel" type="button" hidden>取消</button>
+        <button class="btn btn-tertiary" id="voice-play" type="button" hidden>▶ 试听</button>
+        <button class="btn btn-primary" id="voice-transcribe" type="button" hidden>转为文字</button>
+        <button class="btn btn-tertiary" id="voice-stop-transcribe" type="button" hidden>取消转写</button>
+        <button class="btn btn-tertiary" id="voice-delete" type="button" hidden>删除录音</button>
+      </div>
+      <audio id="voice-audio-preview" class="voice-audio-preview" controls preload="metadata" aria-label="录音试听" hidden></audio>
+      <button id="voice-settings" class="btn btn-tertiary" type="button" hidden>前往设置</button>
+      <p id="voice-message" class="voice-message" role="status" aria-live="polite"></p>
+      <div id="voice-raw-area" class="voice-raw-area" hidden>
+        <label id="voice-raw-label" for="voice-raw">原始转写（可编辑）</label>
+        <textarea id="voice-raw" spellcheck="false"></textarea>
+        <button class="btn btn-primary" id="voice-insert" type="button">追加到笔记正文</button>
+      </div>
     </div>
   </div>
 
@@ -350,6 +391,11 @@
         <div class="kb-upload-label" data-i18n="kbUploadHint">点击上传文档（TXT / MD / CSV）</div>
       </div>
       <div class="kb-list" id="kb-list"></div>
+      <div class="kb-backup-actions">
+        <button class="btn btn-tertiary" type="button" onclick="exportKBBackup()" data-i18n="kbBackupExport">导出知识库备份</button>
+        <button class="btn btn-tertiary" type="button" onclick="document.getElementById('kb-backup-input').click()" data-i18n="kbBackupImport">导入知识库备份</button>
+        <input type="file" id="kb-backup-input" accept=".json,application/json" onchange="importKBBackup(this)" hidden>
+      </div>
       <div class="history-actions">
         <button class="btn btn-danger" onclick="clearAllKB()" data-i18n="btnClearKB">清空知识库</button>
         <button class="btn btn-primary" onclick="toggleKB()" data-i18n="btnClose">关闭</button>
@@ -390,18 +436,52 @@
         <div class="modal-label" data-i18n="apiConfigLabel">API 配置</div>
         <div class="setting-row">
           <label data-i18n="apiBaseLabel">API 地址</label>
-          <input type="text" id="setting-api-base" class="setting-input" placeholder="https://api.openai.com/v1">
-          <div class="setting-hint" data-i18n="apiBaseHint">留空使用默认地址</div>
+          <input type="text" id="setting-api-base" class="setting-input" placeholder="https://api.openai.com/v1" aria-describedby="setting-api-base-feedback">
+          <div id="setting-api-base-feedback" class="setting-hint api-feedback" aria-live="polite"></div>
         </div>
         <div class="setting-row">
           <label data-i18n="apiKeyLabel">API 密钥</label>
-          <input type="password" id="setting-api-key" class="setting-input" placeholder="sk-...">
+          <input type="password" id="setting-api-key" class="setting-input" autocomplete="off" spellcheck="false" aria-describedby="setting-api-key-feedback">
+          <div id="setting-api-key-feedback" class="setting-hint api-feedback" aria-live="polite"></div>
         </div>
         <div class="setting-row">
           <label data-i18n="modelNameLabel">模型名称</label>
-          <input type="text" id="setting-model" class="setting-input" placeholder="qwen-plus">
+          <input type="text" id="setting-model" class="setting-input" placeholder="qwen-plus" aria-describedby="setting-model-feedback">
+          <div id="setting-model-feedback" class="setting-hint api-feedback" aria-live="polite"></div>
         </div>
       </div>
+      <div class="api-test-panel">
+        <button type="button" class="btn btn-primary" id="api-test-button">测试连接</button>
+        <p class="setting-hint" id="api-test-hint"></p>
+        <p id="api-test-status" role="status" aria-live="polite"></p>
+      </div>
+      <section id="asr-config" class="modal-section vault-panel" aria-label="语音识别配置">
+        <div class="modal-label">语音识别 / 录音转文字</div>
+        <label for="asr-select">选择配置</label><select id="asr-select" class="setting-input"><option value="">请选择配置</option></select>
+        <div class="setting-row" id="asr-name-row" hidden><label for="asr-name">配置名称</label><input id="asr-name" class="setting-input" maxlength="60" autocomplete="off"></div>
+        <div class="vault-passwords">
+          <div id="asr-pin-row" hidden><label for="asr-pin">6 位数字密码</label><input id="asr-pin" class="setting-input" type="password" inputmode="numeric" maxlength="6" autocomplete="off"></div>
+          <div id="asr-confirm-row" hidden><label for="asr-confirm">确认密码</label><input id="asr-confirm" class="setting-input" type="password" inputmode="numeric" maxlength="6" autocomplete="off"></div>
+        </div>
+        <div id="asr-fields" hidden>
+          <div class="setting-row"><label for="asr-base">Base URL</label><input id="asr-base" class="setting-input" placeholder="https://api.example.com/v1" aria-describedby="asr-base-feedback"><div id="asr-base-feedback" class="setting-hint api-feedback"></div></div>
+          <div class="setting-row"><label for="asr-key">API Key</label><input id="asr-key" class="setting-input" type="password" autocomplete="off" spellcheck="false" aria-describedby="asr-key-feedback"><div id="asr-key-feedback" class="setting-hint api-feedback"></div></div>
+          <div class="setting-row"><label for="asr-model">Model</label><input id="asr-model" class="setting-input" placeholder="语音识别模型标识" aria-describedby="asr-model-feedback"><div id="asr-model-feedback" class="setting-hint api-feedback"></div></div>
+        </div>
+        <div class="vault-actions">
+          <button type="button" class="btn btn-secondary" id="asr-new">新增配置</button>
+          <button type="button" class="btn btn-secondary" id="asr-save" hidden>加密保存为新配置</button>
+          <button type="button" class="btn btn-secondary" id="asr-unlock" hidden>解锁使用</button>
+          <button type="button" class="btn btn-secondary" id="asr-lock" hidden>锁定</button>
+          <button type="button" class="btn btn-secondary" id="asr-edit" hidden>修改 / 另存</button>
+          <button type="button" class="btn btn-secondary" id="asr-rename" hidden>重命名</button>
+          <button type="button" class="btn btn-secondary" id="asr-rename-save" hidden>保存名称</button>
+          <button type="button" class="btn btn-secondary" id="asr-remove" hidden>删除配置</button>
+          <button type="button" class="btn btn-secondary" id="asr-cancel" hidden>取消</button>
+        </div>
+        <p id="asr-status" role="status" aria-live="polite">未配置</p>
+        <p class="setting-hint">兼容 multipart /audio/transcriptions 的服务。音频转为 WAV 分段发送；密钥仅在解锁后本页使用。</p>
+      </section>
       <hr class="setting-divider">
       <!-- RAG 知识库配置 -->
       <div class="modal-section">
@@ -487,7 +567,17 @@
   <script src="./assets/rag.js"></script>
   <script src="./assets/rag-quality.js"></script>
   <script src="./assets/stream.js"></script>
+  <script src="./assets/api-settings.js"></script>
+  <script src="./assets/api-vault.js"></script>
+  <script src="./assets/api-session.js"></script>
+  <script src="./assets/question-routing.js"></script>
+  <script src="./assets/annotation-core.js"></script>
   <script src="./assets/app.js"></script>
-  <script src="./assets/rag-backend.js"></script>
+  <script src="./assets/api-settings-ui.js"></script>
+  <script src="./assets/api-vault-ui.js"></script>
+  <script src="./assets/asr-settings-ui.js"></script>
+  <script src="./assets/rag-browser-ui.js"></script>
+  <script src="./assets/voice-core.js"></script>
+  <script src="./assets/voice-note.js"></script>
 </body>
 </html>

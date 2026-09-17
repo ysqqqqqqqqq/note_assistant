@@ -1,9 +1,8 @@
 function ragMessage(zh,en) { return typeof _lang !== 'undefined' && _lang === 'en' ? en : zh; }
 /* ═══════════════════════════════════════════════════════
  * RAG Knowledge Base Engine
- * - Embedding: @xenova/transformers (all-MiniLM-L6-v2)
- * - Storage: IndexedDB (vectors + chunks)
- * - Retrieval: Cosine similarity
+ * - Storage: IndexedDB text chunks
+ * - Retrieval: browser-side BM25
  * ═══════════════════════════════════════════════════════ */
 
 /* ── 常量 ──────────────────────────────── */
@@ -12,73 +11,7 @@ var RAG_DB_VERSION = 1;
 var RAG_CHUNK_SIZE = 500;
 var RAG_CHUNK_OVERLAP = 100;
 var RAG_MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-
-/* ── 嵌入模型（惰性加载） ─────────────── */
-var _embedder = null;
-var _embedModelId = 'Xenova/all-MiniLM-L6-v2';
-
-/**
- * 初始化嵌入模型（懒加载，首次调用时从 HuggingFace 下载并缓存）
- * @param {Function} onProgress - 进度回调 function({ status, progress })
- * @returns {Promise<object>} 嵌入模型实例
- */
-async function ragInitEmbedder(onProgress) {
-  if (_embedder) return _embedder;
-  try {
-    if (typeof window._transformersPipeline === 'undefined') {
-      // 动态加载 @xenova/transformers（公开 CDN）
-      var module = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
-      window._transformersPipeline = module.pipeline;
-    }
-    if (onProgress) onProgress({ status: 'loading', progress: 0 });
-    _embedder = await window._transformersPipeline('feature-extraction', _embedModelId, {
-      config: {
-        model: {
-          url: './assets/models/' + _embedModelId + '/'
-        }
-      },
-      progress_callback: function(data) {
-        if (data.status === 'progress' && onProgress) {
-          onProgress({ status: 'downloading', progress: Math.round(data.progress || 0) });
-        }
-      }
-    });
-    if (onProgress) onProgress({ status: 'ready' });
-    return _embedder;
-  } catch (err) {
-    console.error('[RAG] 嵌入模型加载失败:', err);
-    if (onProgress) onProgress({ status: 'failed', error: err.message });
-    throw err;
-  }
-}
-
-/**
- * 计算文本的嵌入向量
- * @param {string} text - 输入文本
- * @returns {Promise<Float32Array>} 嵌入向量
- */
-async function ragEmbedText(text) {
-  if (!_embedder) throw new Error(ragMessage('嵌入模型未初始化','Embedding model is not initialized'));
-  var output = await _embedder(text, { pooling: 'mean', normalize: true });
-  return new Float32Array(output.data);
-}
-
-/**
- * 批量计算嵌入向量
- * @param {string[]} texts - 文本数组
- * @returns {Promise<Float32Array[]>} 嵌入向量数组
- */
-async function ragEmbedBatch(texts) {
-  if (!_embedder) throw new Error(ragMessage('嵌入模型未初始化','Embedding model is not initialized'));
-  var results = [];
-  for (var i = 0; i < texts.length; i++) {
-    var vec = await ragEmbedText(texts[i]);
-    results.push(vec);
-    // 每 10 个让出主线程，避免 UI 卡顿
-    if (i % 10 === 9) await new Promise(function(r) { setTimeout(r, 0); });
-  }
-  return results;
-}
+var _ragIndexCache = null;
 
 /* ── 文本分块（段落分割 + 重叠窗口） ──── */
 
@@ -90,6 +23,9 @@ async function ragEmbedBatch(texts) {
  * @returns {string[]} 分块数组
  */
 function ragChunkText(text, chunkSize, overlap) {
+  return ragChunkSpans(text, chunkSize, overlap).map(function(chunk){return chunk.text;});
+}
+function ragChunkSpans(text, chunkSize, overlap) {
   chunkSize = chunkSize === undefined ? RAG_CHUNK_SIZE : chunkSize;
   overlap = overlap === undefined ? RAG_CHUNK_OVERLAP : overlap;
   if (chunkSize < 1 || overlap < 0 || overlap >= chunkSize) throw new Error('Invalid chunk size / overlap');
@@ -101,14 +37,14 @@ function ragChunkText(text, chunkSize, overlap) {
       var good = matches.filter(function(m){return m.index+1 > Math.max(overlap,chunkSize/2);});
       if (good.length) end = start + good[good.length-1].index + 1;
     }
-    if (text.slice(start,end).trim()) chunks.push(text.slice(start,end));
+    if (text.slice(start,end).trim()) chunks.push({text:text.slice(start,end),start:start,end:end});
     if (end === text.length) break;
     start = end-overlap;
   }
   return chunks;
 }
 
-/* ── IndexedDB 向量存储 ──────────────── */
+/* ── IndexedDB 分块存储 ──────────────── */
 
 /**
  * 打开 RAG IndexedDB 数据库
@@ -131,12 +67,13 @@ function ragOpenDB() {
 }
 
 /**
- * 存储分块和向量到 IndexedDB
+ * 存储分块到 IndexedDB；保留旧向量字段以兼容已有浏览器数据
  * @param {string} filename - 文件名
  * @param {string[]} chunks - 文本分块
  * @param {Float32Array[]} vectors - 对应的嵌入向量
  */
 async function ragStoreChunks(filename, chunks, vectors) {
+  vectors=vectors||[];
   var db = await ragOpenDB();
   var tx = db.transaction(['chunks', 'documents'], 'readwrite');
   var chunkStore = tx.objectStore('chunks');
@@ -151,14 +88,17 @@ async function ragStoreChunks(filename, chunks, vectors) {
       return;
     }
     docStore.put({filename:filename,chunks:chunks.length,uploadedAt:new Date().toISOString()});
-    chunks.forEach(function(text,i) {
-      chunkStore.add({text:text,embedding:Array.from(vectors[i]),sourceFile:filename,createdAt:new Date().toISOString()});
+    chunks.forEach(function(chunk,i) {
+      var span=typeof chunk==='string'?{text:chunk}:chunk;
+      chunkStore.add({text:span.text,embedding:vectors[i]?Array.from(vectors[i]):[],sourceFile:filename,
+        start:Number.isInteger(span.start)?span.start:null,end:Number.isInteger(span.end)?span.end:null,createdAt:new Date().toISOString()});
     });
   };
 
   return new Promise(function(resolve, reject) {
-    tx.oncomplete = function() { resolve(); };
+    tx.oncomplete = function() { _ragIndexCache=null;resolve(); };
     tx.onerror = function() { reject(tx.error); };
+    tx.onabort = function() { reject(tx.error||new Error('Knowledge base write aborted')); };
   });
 }
 
@@ -189,24 +129,19 @@ async function ragDeleteDocument(filename) {
 
   // 删除该文档的所有分块（通过索引扫描）
   var req = chunkStore.openCursor();
-  await new Promise(function(resolve) {
-    req.onsuccess = function(event) {
-      var cursor = event.target.result;
-      if (cursor) {
-        if (cursor.value.sourceFile === filename) cursor.delete();
-        cursor.continue();
-      } else {
-        resolve();
-      }
-    };
-  });
-
-  // 删除文档元信息
-  docStore.delete(filename);
+  req.onsuccess = function(event) {
+        var cursor = event.target.result;
+        if (cursor) {
+          if (cursor.value.sourceFile === filename) cursor.delete();
+          cursor.continue();
+        } else docStore.delete(filename);
+  };
+  req.onerror = function(){/* IndexedDB aborts the transaction after a request error. */};
 
   return new Promise(function(resolve, reject) {
-    tx.oncomplete = function() { resolve(); };
+    tx.oncomplete = function() { _ragIndexCache=null;resolve(); };
     tx.onerror = function() { reject(tx.error); };
+    tx.onabort = function() { reject(tx.error||req.error||new Error('Knowledge base delete aborted')); };
   });
 }
 
@@ -219,8 +154,9 @@ async function ragClearAll() {
   tx.objectStore('chunks').clear();
   tx.objectStore('documents').clear();
   return new Promise(function(resolve, reject) {
-    tx.oncomplete = function() { resolve(); };
+    tx.oncomplete = function() { _ragIndexCache=null;resolve(); };
     tx.onerror = function() { reject(tx.error); };
+    tx.onabort = function() { reject(tx.error||new Error('Knowledge base clear aborted')); };
   });
 }
 
@@ -238,7 +174,7 @@ async function ragGetTotalChunks() {
   });
 }
 
-/* ── 余弦相似度检索 ─────────────────── */
+/* ── BM25 检索 ──────────────────────── */
 
 /**
  * 从知识库检索与查询最相关的文本片段
@@ -247,51 +183,105 @@ async function ragGetTotalChunks() {
  * @returns {Promise<string>} 拼接后的参考上下文
  */
 async function ragRetrieve(query, topN) {
-  topN = topN || 3;
-  var totalChunks = await ragGetTotalChunks();
-  if (totalChunks === 0) return '';
-
-  await ragInitEmbedder();
-  // 计算查询向量
-  var queryVec = await ragEmbedText(query);
-
-  // 读取所有分块
-  var db = await ragOpenDB();
-  var tx = db.transaction('chunks', 'readonly');
-  var store = tx.objectStore('chunks');
-  var allChunks = await new Promise(function(resolve, reject) {
-    var req = store.getAll();
-    req.onsuccess = function() { resolve(req.result || []); };
-    req.onerror = function() { reject(req.error); };
-  });
-
-  if (!allChunks.length) return '';
-
-  // 计算余弦相似度并排序
-  var scored = allChunks.map(function(chunk) {
-    var vec = new Float32Array(chunk.embedding);
-    var sim = cosineSimilarity(queryVec, vec);
-    return { text: chunk.text, source:chunk.sourceFile, score: sim };
-  });
-  scored.sort(function(a, b) { return b.score - a.score; });
-
-  // 取 top-N 拼接
-  var topChunks = scored.slice(0, topN);
-  return topChunks.map(function(c,i) { return '[S'+(i+1)+'] '+c.source+'\n'+c.text; }).join('\n\n---\n\n');
+  return (await ragRetrieveDetailedBrowser(query,topN)).context;
 }
-
-/**
- * 计算两个向量的余弦相似度
- */
-function cosineSimilarity(a, b) {
-  var dot = 0, normA = 0, normB = 0;
-  for (var i = 0; i < a.length; i++) {
-    dot += a[i] * b[i];
-    normA += a[i] * a[i];
-    normB += b[i] * b[i];
-  }
-  var denom = Math.sqrt(normA) * Math.sqrt(normB);
-  return denom === 0 ? 0 : dot / denom;
+async function ragExportBackup() {
+  var documents=await ragListDocuments(),index=await ragBrowserIndex();
+  return {format:'note-assistant-browser-kb',version:1,exportedAt:new Date().toISOString(),
+    documents:documents.map(function(doc){return {filename:doc.filename,chunks:index.docs
+      .filter(function(item){return item.chunk.sourceFile===doc.filename;})
+      .map(function(item){var c=item.chunk;return {text:c.text,start:c.start,end:c.end};})};})};
+}
+async function ragImportBackup(backup) {
+  if(!backup||backup.format!=='note-assistant-browser-kb'||backup.version!==1||!Array.isArray(backup.documents))
+    throw new Error(ragMessage('备份格式不正确','Invalid backup format'));
+  var names=new Set(),total=0;
+  backup.documents.forEach(function(doc){
+    if(!doc||typeof doc.filename!=='string'||!doc.filename||doc.filename.length>255||names.has(doc.filename)||!Array.isArray(doc.chunks)||!doc.chunks.length)
+      throw new Error(ragMessage('备份文档无效','Invalid backup document'));
+    names.add(doc.filename);
+    doc.chunks.forEach(function(c){
+      if(!c||typeof c.text!=='string'||!c.text.trim()||c.text.length>10000)throw new Error(ragMessage('备份片段无效','Invalid backup chunk'));
+      if((c.start!=null||c.end!=null)&&(!Number.isInteger(c.start)||c.start<0||!Number.isInteger(c.end)||c.end-c.start!==c.text.length))
+        throw new Error(ragMessage('备份片段位置无效','Invalid backup chunk position'));
+      total+=c.text.length;
+    });
+  });
+  if(total>50*1024*1024)throw new Error(ragMessage('备份过大','Backup is too large'));
+  var db=await ragOpenDB(),tx=db.transaction(['chunks','documents'],'readwrite');
+  var chunks=tx.objectStore('chunks'),documents=tx.objectStore('documents'),cursor=chunks.openCursor();
+  cursor.onsuccess=function(){
+    var row=cursor.result;
+    if(row){if(names.has(row.value.sourceFile))row.delete();row.continue();return;}
+    backup.documents.forEach(function(doc){
+      documents.put({filename:doc.filename,chunks:doc.chunks.length,uploadedAt:new Date().toISOString()});
+      doc.chunks.forEach(function(c){chunks.add({text:c.text,sourceFile:doc.filename,embedding:[],
+        start:Number.isInteger(c.start)?c.start:null,end:Number.isInteger(c.end)?c.end:null,createdAt:new Date().toISOString()});});
+    });
+  };
+  return new Promise(function(resolve,reject){
+    tx.oncomplete=function(){_ragIndexCache=null;resolve(backup.documents.length);};
+    tx.onerror=function(){reject(tx.error);};
+    tx.onabort=function(){reject(tx.error||new Error('Backup import aborted'));};
+  });
+}
+function ragTokens(value) {
+  var text=String(value||'').toLowerCase(),out=[];
+  var stop=new Set(['a','an','the','is','are','and','or','of','to','in','for','with','what','how','does','do','it','by','on']);
+  (text.match(/[a-z0-9_]+/g)||[]).forEach(function(word){if(!stop.has(word))out.push(word);});
+  (text.match(/[\u3400-\u9fff]+/g)||[]).forEach(function(run){
+    if(run.length===1)out.push(run);
+    else for(var i=0;i<run.length-1;i++)out.push(run.slice(i,i+2));
+  });
+  return out;
+}
+function ragQueryTokens(query) {
+  var stop=new Set(['什么','多少','如何','怎么','是否','请问','哪些','哪里','介绍','说明','一下','一个','关于','相关','内容','问题','可以','能够','的是']);
+  return Array.from(new Set(ragTokens(query).filter(function(token){return !stop.has(token);}))).slice(0,80);
+}
+async function ragBrowserIndex() {
+  if(_ragIndexCache)return _ragIndexCache;
+  var db=await ragOpenDB(),tx=db.transaction('chunks','readonly');
+  var chunks=await new Promise(function(resolve,reject){
+    var req=tx.objectStore('chunks').getAll();
+    req.onsuccess=function(){resolve(req.result||[]);};
+    req.onerror=function(){reject(req.error);};
+  });
+  var docs=chunks.map(function(chunk){
+    var counts=new Map();ragTokens(chunk.text).forEach(function(token){counts.set(token,(counts.get(token)||0)+1);});
+    return {chunk:chunk,counts:counts,length:Array.from(counts.values()).reduce(function(a,b){return a+b;},0)};
+  });
+  var df=new Map();docs.forEach(function(doc){doc.counts.forEach(function(_,token){df.set(token,(df.get(token)||0)+1);});});
+  _ragIndexCache={docs:docs,df:df,avgLength:docs.reduce(function(sum,doc){return sum+doc.length;},0)/Math.max(1,docs.length)||1};
+  return _ragIndexCache;
+}
+async function ragRetrieveDetailedBrowser(query, topN, options) {
+  options=options||{};if(options.signal)options.signal.throwIfAborted();
+  topN=Math.max(1,Math.min(50,Number(topN)||3));
+  var index=await ragBrowserIndex(),terms=ragQueryTokens(query),n=index.docs.length;
+  if(options.signal)options.signal.throwIfAborted();
+  if(!n||!terms.length)return {context:'',hits:[],trace:{warnings:[],candidates:0}};
+  var scored=index.docs.map(function(doc){
+    var score=0,matched=0;
+    terms.forEach(function(token){
+      var tf=doc.counts.get(token)||0;if(!tf)return;
+      matched++;
+      var df=index.df.get(token)||0,idf=Math.log(1+(n-df+0.5)/(df+0.5));
+      score+=idf*tf*2.5/(tf+1.5*(0.25+0.75*doc.length/index.avgLength));
+    });
+    return {chunk:doc.chunk,score:score,matched:matched,coverage:matched/terms.length};
+  }).filter(function(item){
+    var exactIdentifier=terms.some(function(token){return /^[a-z0-9_]+$/.test(token)&&item.chunk.text.toLowerCase().includes(token);});
+    return item.matched>0&&((item.coverage>=0.25&&(terms.length===1||item.matched>=2))||exactIdentifier);
+  });
+  scored.sort(function(a,b){return b.score-a.score||b.coverage-a.coverage;});
+  var hits=scored.slice(0,topN).map(function(item,i){
+    var chunk=item.chunk;
+    return {text:chunk.text,source:chunk.sourceFile,score:item.score,coverage:item.coverage,chunkId:chunk.id,
+      start:Number.isInteger(chunk.start)?chunk.start:null,end:Number.isInteger(chunk.end)?chunk.end:null,citation:'S'+(i+1)};
+  });
+  return {context:hits.map(function(hit){return '['+hit.citation+'] '+hit.source+' (片段 #'+hit.chunkId+')\n'+hit.text;}).join('\n\n---\n\n'),
+    hits:hits,trace:{warnings:[],candidates:scored.length}};
 }
 
 /* ── 知识库文件上传处理 ─────────────── */
@@ -324,7 +314,7 @@ function ragReadFileText(file) {
 }
 
 /**
- * 处理文件上传：读取 → 分块 → 嵌入 → 存储
+ * 处理文件上传：读取 → 分块 → 存储
  * @param {File} file - 用户上传的文件
  * @param {Function} onProgress - 进度回调 function({ stage, progress, message })
  * @returns {Promise<{filename: string, chunks: number}>}
@@ -342,31 +332,11 @@ async function ragUploadFile(file, onProgress) {
 
   // 2. 分块
   if (onProgress) onProgress({ stage: 'chunking', message: ragMessage('正在分块…','Splitting into chunks…') });
-  var chunks = ragChunkText(text);
+  var chunks = ragChunkSpans(text);
   if (!chunks.length) throw new Error(ragMessage('文件分块结果为空','No text chunks found'));
-
-  // 3. 加载嵌入模型
-  if (onProgress) onProgress({ stage: 'embedding', progress: 0, message: ragMessage('正在计算嵌入向量…','Computing embeddings…') });
-  await ragInitEmbedder(function(p) {
-    if (onProgress && p.status === 'downloading') {
-      onProgress({ stage: 'embedding', progress: p.progress, message: ragMessage('嵌入模型下载中 ','Downloading embedding model ') + p.progress + '%' });
-    }
-  });
-
-  // 4. 批量嵌入
-  var vectors = [];
-  for (var i = 0; i < chunks.length; i++) {
-    var vec = await ragEmbedText(chunks[i]);
-    vectors.push(vec);
-    if (onProgress) {
-      var pct = Math.round(((i + 1) / chunks.length) * 100);
-      onProgress({ stage: 'embedding', progress: pct, message: ragMessage('嵌入计算 ','Embedding progress ') + pct + '% (' + (i + 1) + '/' + chunks.length + ')' });
-    }
-  }
-
-  // 5. 存储到 IndexedDB
+  // BM25 indexes stored text on demand; uploading never depends on a model download.
   if (onProgress) onProgress({ stage: 'storing', message: ragMessage('正在保存到本地数据库…','Saving to local database…') });
-  await ragStoreChunks(file.name, chunks, vectors);
+  await ragStoreChunks(file.name, chunks);
 
   return { filename: file.name, chunks: chunks.length };
 }

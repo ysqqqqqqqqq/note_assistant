@@ -13,3 +13,11 @@ test('provider errors and token truncation are not success',async()=>{
  await assert.rejects(readCompletionStream(response('data: {"choices":[{"delta":{"content":"x"},"finish_reason":"length"}]}\n\n'),()=>{}),/limit/);
 });
 test('JSON-only compatible providers work without repeat request',async()=>{let got='';const r=await readCompletionStream(new Response(JSON.stringify({choices:[{message:{content:'ok'}}]}),{headers:{'content-type':'application/json'}}),d=>got+=d);assert.equal(r,'ok');assert.equal(got,'ok');});
+test('two long streams update independently, complete, and do not duplicate chunks',async()=>{
+ const make=(value)=>response('data: '+JSON.stringify({choices:[{delta:{content:value.slice(0,2)}}]})+'\n\n'+
+   'data: '+JSON.stringify({choices:[{delta:{content:value.slice(2)},finish_reason:'stop'}]})+'\n\n'+'data: [DONE]\n\n');
+ const a=[],b=[];
+ const values=await Promise.all([readCompletionStream(make('中文流式回答'),d=>a.push(d)),readCompletionStream(make('第二条回答'),d=>b.push(d))]);
+ assert.deepEqual(values,['中文流式回答','第二条回答']);
+ assert.equal(a.join(''),values[0]);assert.equal(b.join(''),values[1]);assert.equal(a.length,2);assert.equal(b.length,2);
+});

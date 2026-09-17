@@ -9,12 +9,14 @@ class GenerationContract(unittest.TestCase):
 
     @patch.dict(os.environ,{'DASHSCOPE_API_KEY':'test-fixture-only'})
     @patch('httpx.post')
-    def test_no_evidence_does_not_request_an_explanation(self,post):
-        post.return_value=self.response('{"terms":["BM25"],"sentences":[]}')
+    def test_no_evidence_falls_back_to_llm_explanation(self,post):
+        post.side_effect=[self.response('{"terms":["BM25"],"sentences":[]}'),self.response('BM25 是关键词排序算法。')]
         r=create_app(Pipeline(':memory:')).test_client().post('/annotate',json={'note_text':'BM25'})
         self.assertEqual(r.status_code,200)
-        self.assertEqual(post.call_count,1)
+        self.assertEqual(post.call_count,2)
         self.assertEqual(r.json['annotations'][0]['fallback'],'no_evidence')
+        self.assertEqual(r.json['annotations'][0]['sources'],[])
+        self.assertEqual(r.json['annotations'][0]['explanation'],'BM25 是关键词排序算法。')
 
     @patch.dict(os.environ,{'DASHSCOPE_API_KEY':'test-fixture-only'})
     @patch('httpx.post')
@@ -33,3 +35,10 @@ class GenerationContract(unittest.TestCase):
         r=create_app(Pipeline(':memory:')).test_client().post('/annotate',json={'note_text':'BM25'})
         self.assertEqual(r.status_code,502)
         self.assertNotIn('test-fixture-only',r.get_data(as_text=True))
+
+    @patch.dict(os.environ,{'DASHSCOPE_API_KEY':'test-fixture-only'})
+    @patch('httpx.post')
+    def test_hallucinated_citation_is_removed_without_evidence(self,post):
+        post.side_effect=[self.response('{"terms":["BM25"],"sentences":[]}'),self.response('关键词检索 [S99]')]
+        r=create_app(Pipeline(':memory:')).test_client().post('/annotate',json={'note_text':'BM25'})
+        self.assertEqual(r.json['annotations'][0]['explanation'],'关键词检索 ')

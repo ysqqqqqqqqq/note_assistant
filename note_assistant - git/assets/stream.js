@@ -30,8 +30,9 @@
       while (!done) {
         var part = await reader.read();
         buffer += decoder.decode(part.value || new Uint8Array(), {stream:!part.done});
-        // Normalize after buffering, so CRLF split across network chunks is safe.
-        buffer = buffer.replace(/\r\n/g,'\n');
+        // Keep a trailing CR until the next read, so split CRLF is one newline.
+        var tail = !part.done && buffer.endsWith('\r') ? '\r' : '';
+        buffer = buffer.slice(0,buffer.length-tail.length).replace(/\r\n|\r/g,'\n') + tail;
         var boundary;
         while ((boundary = buffer.indexOf('\n\n')) !== -1) {
           event(buffer.slice(0,boundary)); buffer = buffer.slice(boundary+2);

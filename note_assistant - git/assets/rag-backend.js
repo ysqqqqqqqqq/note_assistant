@@ -30,7 +30,7 @@
   };
   window.ragClearAll = async function () { return enabled() ? api('/kb/clear',{}) : original.ragClearAll(); };
   window.ragRetrieveDetailed = async function (query, k) {
-    if (!enabled()) return {context:await original.ragRetrieve(query,k), hits:[], trace:{warnings:[]}};
+    if (!enabled()) return ragRetrieveDetailedBrowser(query,k);
     var settings = loadSettings(), variants = [], warnings = [];
     if (settings.ragMultiQuery) {
       try {
@@ -50,6 +50,26 @@
     return result;
   };
   window.ragRetrieve = async function (query,k) { return (await ragRetrieveDetailed(query,k)).context; };
+  window.runRagTest = async function (button) {
+    var output=document.getElementById('rag-test-result');
+    var query=document.getElementById('rag-test-query').value.trim();
+    if(!query){output.textContent=label('queryPlaceholder');return;}
+    button.disabled=true;output.textContent=label('searching');
+    var settings=loadSettings(),result=null,failed=false;
+    try {result=await ragRetrieveDetailed(query,settings.topN||3);}
+    catch(err){failed=true;console.warn('[RAG] test retrieval failed',err);}
+    try {
+      if(result&&result.hits&&result.hits.length){output.textContent=result.context;return;}
+      if(!settings.ragMultiQuery){output.textContent=failed?label('retrievalUnavailable'):label('noEvidence');return;}
+      var prefix=label(failed||result&&result.fallback==='verification_unavailable'?'kbErrorModel':'kbMissModel')+'\n';
+      output.textContent=prefix;
+      var partial='';
+      var answer=await callLLM([{role:'system',content:'直接回答用户问题。没有本地知识库依据时使用一般知识，不声称联网搜索，不编造来源编号。只输出易读纯文本，不使用 HTML 实体、Markdown 标记或 LaTeX；除非问题明确询问公式，否则不要给公式。'},
+        {role:'user',content:query}],{onDelta:function(delta){partial+=delta;output.textContent=prefix+AnnotationCore.validCitations(AnnotationCore.cleanModelText(partial),[]);}});
+      output.textContent=prefix+AnnotationCore.validCitations(AnnotationCore.cleanModelText(answer),[]);
+    } catch(err){output.textContent=(output.textContent||'')+'\n'+apiUserError(err);}
+    finally {button.disabled=false;}
+  };
   document.addEventListener('DOMContentLoaded',function () {
     var anchor = document.getElementById('setting-top-n');
     var panel = document.createElement('div');
@@ -61,12 +81,22 @@
     document.getElementById('rag-backend').checked = !!s.ragBackend;
     document.getElementById('rag-multi').checked = !!s.ragMultiQuery;
     document.getElementById('rag-source').value = s.ragSource || '';
+    function updateFields(){
+      var on=document.getElementById('setting-rag-enabled').checked;
+      anchor.parentElement.hidden=!on;
+      document.getElementById('rag-backend').closest('.setting-row').hidden=!on;
+      document.getElementById('rag-multi').closest('.setting-row').hidden=!on||!document.getElementById('rag-backend').checked;
+      document.getElementById('rag-source').closest('.setting-row').hidden=!on||!document.getElementById('rag-backend').checked;
+    }
+    updateFields();
+    document.getElementById('setting-rag-enabled').addEventListener('change',updateFields);
     panel.addEventListener('change',function () {
       var next = loadSettings();
       next.ragBackend = document.getElementById('rag-backend').checked;
       next.ragMultiQuery = document.getElementById('rag-multi').checked;
       next.ragSource = document.getElementById('rag-source').value.trim();
       saveSettings(next);
+      updateFields();
     });
     var kb = document.getElementById('kb-status');
     var testPanel = document.createElement('div');
@@ -75,15 +105,6 @@
 
     kb.parentElement.insertBefore(testPanel, kb.parentElement.querySelector('.history-actions'));
     applyI18n();
-    document.getElementById('rag-test-button').addEventListener('click',async function () {
-      var button = this, output = document.getElementById('rag-test-result');
-      button.disabled = true;
-      output.textContent = label('searching');
-      try {
-        var result = await ragRetrieveDetailed(document.getElementById('rag-test-query').value,loadSettings().topN || 3);
-        output.textContent = (result.context || label('noEvidence')) + '\n' + result.trace.warnings.map(warningText).filter(function(v,i,a){return a.indexOf(v)===i;}).join('\n');
-      } catch (err) { output.textContent = label('retrievalUnavailable'); }
-      finally { button.disabled = false; }
-    });
+    document.getElementById('rag-test-button').addEventListener('click',function(){runRagTest(this);});
   });
 })();

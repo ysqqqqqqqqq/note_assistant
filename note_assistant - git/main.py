@@ -1,4 +1,4 @@
-"""Compatibility entry point for the shared RAG service."""
+"""Compatibility entry point for the browser-only web app."""
 from server import app
 
 if __name__ == "__main__":

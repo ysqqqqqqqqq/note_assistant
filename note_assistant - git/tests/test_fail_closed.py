@@ -4,16 +4,18 @@ from unittest.mock import patch, Mock
 from rag_engine import Config, Pipeline
 
 class FailClosedTests(unittest.TestCase):
-    def test_annotation_api_never_calls_explanation_after_verifier_failure(self):
+    def test_annotation_api_uses_uncited_llm_fallback_after_verifier_failure(self):
         from server import create_app
         p=self.engine('missing')
         response=Mock();response.json.return_value={'choices':[{'message':{'content':'{"terms":["缓存"],"sentences":[]}'}}]}
-        with patch.dict(os.environ,{'DASHSCOPE_API_KEY':'fixture-only'}),patch('httpx.post',return_value=response) as post:
+        explanation=Mock();explanation.json.return_value={'choices':[{'message':{'content':'缓存是临时存储。'}}]}
+        with patch.dict(os.environ,{'DASHSCOPE_API_KEY':'fixture-only'}),patch('httpx.post',side_effect=[response,explanation]) as post:
             result=create_app(p).test_client().post('/annotate',json={'note_text':'缓存'})
         self.assertEqual(result.status_code,200)
-        self.assertEqual(post.call_count,1)
+        self.assertEqual(post.call_count,2)
         self.assertEqual(result.json['annotations'][0]['fallback'],'verification_unavailable')
-        self.assertIn('校验服务',result.json['annotations'][0]['explanation'])
+        self.assertEqual(result.json['annotations'][0]['explanation'],'缓存是临时存储。')
+        self.assertEqual(result.json['annotations'][0]['sources'],[])
     def engine(self, mode):
         p=Pipeline(':memory:',Config(reranker_model='fixture',min_rerank_score=0))
         p.put('doc','缓存十分钟后过期。')
